@@ -16,6 +16,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 # Add your source files here as the project grows
 set(PROJECT_SOURCES
     src/main.cpp
+    src/core/Player.cpp
+    src/core/Space.cpp
+    src/core/GameEngine.cpp
+    src/ui/BoardWidget.cpp
 )
 
 add_executable(QtMonopoly ${PROJECT_SOURCES})
