@@ -1,11 +1,15 @@
 name: Build Windows Game
 on: [push]
 
+# Forces all legacy Node 20 actions to run securely on Node 24
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4  # <-- Updated to v4
+    - uses: actions/checkout@v4
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
@@ -27,7 +31,7 @@ jobs:
         windeployqt release_folder\QtMonopoly.exe
 
     - name: Upload Windows Game
-      uses: actions/upload-artifact@v4  # <-- Updated to v4
+      uses: actions/upload-artifact@v4
       with:
         name: QtMonopoly-Windows
         path: release_folder/
