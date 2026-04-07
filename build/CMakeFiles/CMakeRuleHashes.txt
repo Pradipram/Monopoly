@@ -1,0 +1,4 @@
+# Hashes of file build rules.
+ff207b10fbf2417eb2042bdee530765b CMakeFiles/QtMonopoly_autogen
+ff207b10fbf2417eb2042bdee530765b CMakeFiles/QtMonopoly_autogen_timestamp_deps
+a0d4f8de4d3ac84acc8991cfeca6be49 QtMonopoly_autogen/timestamp

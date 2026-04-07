@@ -1,0 +1,5 @@
+/home/pradip/Projects/QtMonopoly/build/CMakeFiles/QtMonopoly.dir
+/home/pradip/Projects/QtMonopoly/build/CMakeFiles/edit_cache.dir
+/home/pradip/Projects/QtMonopoly/build/CMakeFiles/rebuild_cache.dir
+/home/pradip/Projects/QtMonopoly/build/CMakeFiles/QtMonopoly_autogen_timestamp_deps.dir
+/home/pradip/Projects/QtMonopoly/build/CMakeFiles/QtMonopoly_autogen.dir
