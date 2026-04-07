@@ -5,12 +5,12 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4  # <-- Updated to v4
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.5.3' # Or whichever Qt 6 version you are using
+        version: '6.5.3' 
         target: 'desktop'
         arch: 'win64_mingw'
 
@@ -27,7 +27,7 @@ jobs:
         windeployqt release_folder\QtMonopoly.exe
 
     - name: Upload Windows Game
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # <-- Updated to v4
       with:
         name: QtMonopoly-Windows
         path: release_folder/
