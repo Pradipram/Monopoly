@@ -20,6 +20,7 @@ set(PROJECT_SOURCES
     src/core/Space.cpp
     src/core/GameEngine.cpp
     src/ui/BoardWidget.cpp
+    src/ui/MainWindow.cpp
 )
 
 add_executable(QtMonopoly ${PROJECT_SOURCES})
