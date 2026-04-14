@@ -33,6 +33,14 @@ class SpaceItem : public QGraphicsItem
 
     void drawIcon(QPainter* painter, QPixmap* iconToDraw);
     void drawInvertedTextwithPrice(QPainter* painter);
+    void drawInvertedText(QPainter* painter);
+
+    // Helper functions for painting different spaces
+    void drawGoSpace(QPainter* painter);
+    void drawPropertySpace(QPainter* painter, const QFont& font);
+    void drawPricedIconSpace(QPainter* painter, const QFont& font);
+    void drawIconSpace(QPainter* painter, const QFont& font);
+    void drawCornerIconSpace(QPainter* painter, const QFont& font, const QString& imagePath);
 };
 
 #endif  // SPACEITEM_H
