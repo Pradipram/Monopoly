@@ -1,150 +1,110 @@
 #include "BoardWidget.h"
-#include <QPainter>
-#include <QPen>
-#include <QBrush>
-#include <QColor>
-#include <QFontMetrics>
 
-BoardWidget::BoardWidget(GameEngine* engine, QWidget *parent)
-    : QWidget(parent), m_engine(engine)
+#include <QGraphicsDropShadowEffect>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+
+#include "SpaceItem.h"
+
+BoardWidget::BoardWidget(int botCount, QWidget* parent) : QWidget(parent), m_botCount(botCount)
 {
-    setMinimumSize(600, 600);
+    m_gameEngine = new GameEngine();
+    init_UI();
 }
 
-void BoardWidget::updateBoard() {
-    update(); // Schedule a repaint
+void BoardWidget::init_UI()
+{
+    this->setAttribute(Qt::WA_StyledBackground, true);
+    this->setStyleSheet("background-color: rgb(205, 230, 208);");
+    init_board_UI();
+    init_info_UI();
 }
 
-QRectF BoardWidget::getSpaceRect(int index, qreal w, qreal h) const {
-    qreal cellW = w / 11.0;
-    qreal cellH = h / 11.0;
-    int row = 0, col = 0;
+void BoardWidget::init_board_UI()
+{
+    QGraphicsScene* scene = new QGraphicsScene(this);
+    scene->setSceneRect(-5, -5, 1010, 1010);
 
-    index = index % 40;
+    QGraphicsView* view = new QGraphicsView(scene, this);
+    view->setGeometry(10, 10, 1010, 1010);
+    view->setObjectName("gameBoard");
 
-    if (index >= 0 && index < 10) {
-        row = 10;
-        col = 10 - index;
-    } else if (index >= 10 && index < 20) {
-        col = 0;
-        row = 10 - (index - 10);
-    } else if (index >= 20 && index < 30) {
-        row = 0;
-        col = index - 20;
-    } else if (index >= 30 && index < 40) {
-        col = 10;
-        row = index - 30;
-    }
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    return QRectF(col * cellW, row * cellH, cellW, cellH);
-}
+    // 1. Change "border: 2px solid gray;" to "border: none;"
+    view->setStyleSheet(
+        "#gameBoard {"
+        "  background-color: rgb(255, 255, 255);"
+        "  border-radius: 10px;"
+        "  border: none;"
+        "  border-image: url(:/background.jpg) 0 0 0 0 stretch stretch;"
+        "}");
 
-void BoardWidget::paintEvent(QPaintEvent *event) {
-    Q_UNUSED(event);
+    view->setRenderHint(QPainter::Antialiasing);
 
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
+    // 2. Create and configure the raised shadow effect
+    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(this);
+    shadow->setBlurRadius(25);               // How soft and feathered the shadow is
+    shadow->setXOffset(0);                   // 0 keeps the shadow centered directly underneath
+    shadow->setYOffset(10);                  // Pushes the shadow slightly down to look "raised"
+    shadow->setColor(QColor(0, 0, 0, 120));  // Black, but semi-transparent
 
-    // Fill background
-    painter.fillRect(rect(), QColor("#DDE5D6")); // classic light green ish background
+    // 3. Apply the effect to the game board
+    view->setGraphicsEffect(shadow);
+    QList<Space*> allSpaces = m_gameEngine->getSpacesList();
 
-    qreal w = width();
-    qreal h = height();
+    int maxPos = 1000;
+    int cornerSize = 140;
+    int regSize = 80;
 
-    const auto& board = m_engine->getBoard();
-    if (board.empty()) return;
+    // Pre-calculate the halves to easily find the exact center of any tile
+    double cornerHalf = cornerSize / 2.0;
+    double regHalf = regSize / 2.0;
 
-    // Draw the 40 spaces
-    for (int i = 0; i < 40; ++i) {
-        QRectF r = getSpaceRect(i, w, h);
-        drawSpace(painter, i, r);
-    }
+    for (Space* spaceLogic : allSpaces) {
+        SpaceItem* visualTile = new SpaceItem(spaceLogic);
+        int index = spaceLogic->index();
 
-    // Draw the inner center box outline
-    qreal cellW = w / 11.0;
-    qreal cellH = h / 11.0;
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawRect(cellW, cellH, w - 2 * cellW, h - 2 * cellH);
-    
-    // Draw Monoply title in center
-    QFont titleFont = painter.font();
-    titleFont.setPointSize(24);
-    titleFont.setBold(true);
-    painter.setFont(titleFont);
-    painter.setPen(Qt::black);
-    painter.drawText(QRectF(cellW, cellH, w - 2 * cellW, h - 2 * cellH), Qt::AlignCenter, "QT MONOPOLY");
+        double centerX = 0;
+        double centerY = 0;
 
-    drawPlayers(painter, w, h);
-}
-
-void BoardWidget::drawSpace(QPainter& painter, int index, const QRectF& rect) {
-    const auto& board = m_engine->getBoard();
-    if (index >= static_cast<int>(board.size())) return;
-    
-    const auto& space = board[index];
-
-    painter.setPen(QPen(Qt::black, 1));
-    
-    // Draw owner color block for properties
-    if (space->getOwner() != nullptr) {
-        painter.setBrush(QColor("#FFCCCC")); // Light red to indicate owned
-    } else {
-        painter.setBrush(Qt::white);
-    }
-    
-    painter.drawRect(rect);
-
-    painter.setPen(Qt::black);
-    QFont f = painter.font();
-    f.setPointSize(7);
-    painter.setFont(f);
-
-    QString text = space->getName();
-    if (space->getType() == SpaceType::Property || space->getType() == SpaceType::Railroad) {
-        text += QString("\n$%1").arg(space->getPrice());
-        if (space->getOwner()) {
-            text += QString("\nOwner: %1").arg(space->getOwner()->getName());
+        // Calculate the exact Center X/Y for the tile
+        if (index == 0) {  // START (Bottom Right)
+            centerX = maxPos - cornerHalf;
+            centerY = maxPos - cornerHalf;
+        } else if (index > 0 && index < 10) {  // Bottom Row (Moving Left)
+            centerX = maxPos - cornerSize - regHalf - ((index - 1) * regSize);
+            centerY = maxPos - cornerHalf;
+        } else if (index == 10) {  // JAIL (Bottom Left)
+            centerX = cornerHalf;
+            centerY = maxPos - cornerHalf;
+        } else if (index > 10 && index < 20) {  // Left Row (Moving Up)
+            centerX = cornerHalf;
+            centerY = maxPos - cornerSize - regHalf - ((index - 11) * regSize);
+        } else if (index == 20) {  // FREE PARKING (Top Left)
+            centerX = cornerHalf;
+            centerY = cornerHalf;
+        } else if (index > 20 && index < 30) {  // Top Row (Moving Right)
+            centerX = cornerSize + regHalf + ((index - 21) * regSize);
+            centerY = cornerHalf;
+        } else if (index == 30) {  // GO TO JAIL (Top Right)
+            centerX = maxPos - cornerHalf;
+            centerY = cornerHalf;
+        } else if (index > 30 && index < 40) {  // Right Row (Moving Down)
+            centerX = maxPos - cornerHalf;
+            centerY = cornerSize + regHalf + ((index - 31) * regSize);
         }
-    }
 
-    painter.drawText(rect.adjusted(2, 2, -2, -2), Qt::AlignCenter | Qt::TextWordWrap, text);
-}
+        // To set the item's exact position, we subtract half its width/height from the center
+        int tileWidth = (index % 10 == 0) ? cornerSize : regSize;
+        int tileHeight = cornerSize;  // Height is always 140 facing inward
 
-void BoardWidget::drawPlayers(QPainter& painter, qreal w, qreal h) {
-    const QColor colors[] = { Qt::red, Qt::blue, Qt::green, Qt::yellow, Qt::magenta, Qt::cyan };
+        visualTile->setPos(centerX - (tileWidth / 2.0), centerY - (tileHeight / 2.0));
 
-    // To prevent overlap, keep track of how many players are on each space
-    int offsets[40] = {0};
-
-    const auto& players = m_engine->getPlayers();
-    int pIndex = 0;
-    for (const auto& player : players) {
-        if (!player) continue;
-
-        int pos = player->getPosition();
-        if (pos >= 0 && pos < 40) {
-            QRectF r = getSpaceRect(pos, w, h);
-            
-            // Draw a small circle for the player token
-            qreal radius = qMin(r.width(), r.height()) / 6.0;
-            
-            // Calculate a staggered position based on how many players are already here
-            int offset = offsets[pos]++;
-            qreal dx = (offset % 2) * (radius * 2.2);
-            qreal dy = (offset / 2) * (radius * 2.2);
-
-            QRectF tokenRect(r.x() + 5 + dx, r.y() + 5 + dy, radius * 2, radius * 2);
-
-            painter.setBrush(colors[pIndex % 6]);
-            
-            if (player.get() == m_engine->getCurrentPlayer()) {
-                painter.setPen(QPen(Qt::white, 2));
-            } else {
-                painter.setPen(QPen(Qt::black, 1));
-            }
-            
-            painter.drawEllipse(tokenRect);
-        }
-        pIndex++;
+        // Add it to the canvas
+        scene->addItem(visualTile);
     }
 }
+
+void BoardWidget::init_info_UI() {}

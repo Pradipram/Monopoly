@@ -1,0 +1,362 @@
+[
+  {
+    "index": 0,
+    "name": "Start",
+    "type": "Go",
+    "price": 400,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 1,
+    "name": "Thessaloniki",
+    "type": "Property",
+    "price": 120,
+    "rent": [10, 20, 60, 180, 320, 500],
+    "houseBuildCost": 100,
+    "colorGroup": "Yellow-Green"
+  },
+  {
+    "index": 2,
+    "name": "Chance",
+    "type": "Chance",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 3,
+    "name": "Athens",
+    "type": "Property",
+    "price": 120,
+    "rent": [10, 40, 120, 360, 640, 900],
+    "houseBuildCost": 100,
+    "colorGroup": "Yellow-Green"
+  },
+  {
+    "index": 4,
+    "name": "Income Tax",
+    "type": "Tax",
+    "price": 200,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 5,
+    "name": "Railroad 1",
+    "type": "Railroad",
+    "price": 200,
+    "rent": [50, 100, 200, 400, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 6,
+    "name": "Naples",
+    "type": "Property",
+    "price": 200,
+    "rent": [20, 60, 180, 540, 800, 1100],
+    "houseBuildCost": 100,
+    "colorGroup": "Red"
+  },
+  {
+    "index": 7,
+    "name": "Chance",
+    "type": "Chance",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 8,
+    "name": "Rome",
+    "type": "Property",
+    "price": 200,
+    "rent": [20, 60, 180, 540, 800, 1100],
+    "houseBuildCost": 100,
+    "colorGroup": "Red"
+  },
+  {
+    "index": 9,
+    "name": "Milan",
+    "type": "Property",
+    "price": 240,
+    "rent": [20, 80, 200, 600, 900, 1200],
+    "houseBuildCost": 100,
+    "colorGroup": "Red"
+  },
+  {
+    "index": 10,
+    "name": "Jail / Just Visiting",
+    "type": "Jail",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 11,
+    "name": "Seville",
+    "type": "Property",
+    "price": 280,
+    "rent": [20, 100, 300, 900, 1250, 1500],
+    "houseBuildCost": 200,
+    "colorGroup": "Deep-Sky-Blue"
+  },
+  {
+    "index": 12,
+    "name": "Utility 1",
+    "type": "Utility",
+    "price": 150,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 13,
+    "name": "Barcelona",
+    "type": "Property",
+    "price": 280,
+    "rent": [20, 100, 300, 900, 1250, 1500],
+    "houseBuildCost": 200,
+    "colorGroup": "Deep-Sky-Blue"
+  },
+  {
+    "index": 14,
+    "name": "Madrid",
+    "type": "Property",
+    "price": 320,
+    "rent": [30, 120, 360, 1000, 1400, 1800],
+    "houseBuildCost": 200,
+    "colorGroup": "Deep-Sky-Blue"
+  },
+  {
+    "index": 15,
+    "name": "Railroad 2",
+    "type": "Railroad",
+    "price": 200,
+    "rent": [50, 100, 200, 400, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 16,
+    "name": "Manchester",
+    "type": "Property",
+    "price": 360,
+    "rent": [30, 140, 400, 1100, 1500, 1900],
+    "houseBuildCost": 200,
+    "colorGroup": "Orange"
+  },
+  {
+    "index": 17,
+    "name": "Community Chest",
+    "type": "CommunityChest",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 18,
+    "name": "Liverpool",
+    "type": "Property",
+    "price": 360,
+    "rent": [30, 140, 400, 1100, 1500, 1900],
+    "houseBuildCost": 200,
+    "colorGroup": "Orange"
+  },
+  {
+    "index": 19,
+    "name": "London",
+    "type": "Property",
+    "price": 400,
+    "rent": [40, 160, 440, 1200, 1600, 2000],
+    "houseBuildCost": 200,
+    "colorGroup": "Orange"
+  },
+  {
+    "index": 20,
+    "name": "Free Parking",
+    "type": "FreeParking",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 21,
+    "name": "Rotterdam",
+    "type": "Property",
+    "price": 440,
+    "rent": [40, 180, 500, 1400, 1750, 2100],
+    "houseBuildCost": 300,
+    "colorGroup": "Dark-Green"
+  },
+  {
+    "index": 22,
+    "name": "Chance",
+    "type": "Chance",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 23,
+    "name": "Brussels",
+    "type": "Property",
+    "price": 440,
+    "rent": [40, 180, 500, 1400, 1750, 2100],
+    "houseBuildCost": 300,
+    "colorGroup": "Dark-Green"
+  },
+  {
+    "index": 24,
+    "name": "Amsterdam",
+    "type": "Property",
+    "price": 480,
+    "rent": [40, 200, 600, 1500, 1850, 2200],
+    "houseBuildCost": 300,
+    "colorGroup": "Dark-Green"
+  },
+  {
+    "index": 25,
+    "name": "Railroad 3",
+    "type": "Railroad",
+    "price": 200,
+    "rent": [50, 100, 200, 400, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 26,
+    "name": "Gothenburg",
+    "type": "Property",
+    "price": 520,
+    "rent": [50, 220, 660, 1600, 1950, 2300],
+    "houseBuildCost": 300,
+    "colorGroup": "Indigo"
+  },
+  {
+    "index": 27,
+    "name": "Malmo",
+    "type": "Property",
+    "price": 520,
+    "rent": [50, 220, 660, 1600, 1950, 2300],
+    "houseBuildCost": 300,
+    "colorGroup": "Indigo"
+  },
+  {
+    "index": 28,
+    "name": "Utility 2",
+    "type": "Utility",
+    "price": 150,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 29,
+    "name": "Stockholm",
+    "type": "Property",
+    "price": 560,
+    "rent": [50, 240, 720, 1700, 2050, 2400],
+    "houseBuildCost": 300,
+    "colorGroup": "Indigo"
+  },
+  {
+    "index": 30,
+    "name": "Go To Jail",
+    "type": "GoToJail",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 31,
+    "name": "Munich",
+    "type": "Property",
+    "price": 600,
+    "rent": [60, 260, 780, 1800, 2200, 2550],
+    "houseBuildCost": 400,
+    "colorGroup": "Brown"
+  },
+  {
+    "index": 32,
+    "name": "Cologne",
+    "type": "Property",
+    "price": 600,
+    "rent": [60, 260, 780, 1800, 2200, 2550],
+    "houseBuildCost": 400,
+    "colorGroup": "Brown"
+  },
+  {
+    "index": 33,
+    "name": "Community Chest",
+    "type": "CommunityChest",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 34,
+    "name": "Berlin",
+    "type": "Property",
+    "price": 640,
+    "rent": [60, 300, 900, 2000, 2400, 2800],
+    "houseBuildCost": 400,
+    "colorGroup": "Brown"
+  },
+  {
+    "index": 35,
+    "name": "Railroad 4",
+    "type": "Railroad",
+    "price": 200,
+    "rent": [50, 100, 200, 400, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 36,
+    "name": "Chance",
+    "type": "Chance",
+    "price": 0,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 37,
+    "name": "Innsbruck",
+    "type": "Property",
+    "price": 700,
+    "rent": [70, 350, 1000, 2200, 2600, 3000],
+    "houseBuildCost": 400,
+    "colorGroup": "Dark-Jungle-Green"
+  },
+  {
+    "index": 38,
+    "name": "Luxury Tax",
+    "type": "Tax",
+    "price": 100,
+    "rent": [0, 0, 0, 0, 0, 0],
+    "houseBuildCost": 0,
+    "colorGroup": "None"
+  },
+  {
+    "index": 39,
+    "name": "Vienna",
+    "type": "Property",
+    "price": 800,
+    "rent": [100, 400, 1200, 2800, 3400, 4000],
+    "houseBuildCost": 400,
+    "colorGroup": "Dark-Jungle-Green"
+  }
+]

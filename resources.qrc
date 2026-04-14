@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/images/background.jpg</file>
+        <file>assets/board_spaces.json</file>
+    </qresource>
+</RCC>

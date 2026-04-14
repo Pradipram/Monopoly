@@ -13,16 +13,24 @@ set(CMAKE_AUTOUIC ON)
 # Find Qt6 modules
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-# Add your source files here as the project grows
-set(PROJECT_SOURCES
-    src/main.cpp
-    src/core/Player.cpp
-    src/core/Space.cpp
-    src/core/GameEngine.cpp
-    src/ui/BoardWidget.cpp
-    src/ui/MainWindow.cpp
+# Automatically find all source and header files in the src directory
+file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
+    "src/*.cpp"
+    "src/*.h"
+)
+add_custom_target(format
+    COMMAND clang-format -i ${ALL_SOURCE_FILES}
+    COMMENT "Formating code with Clang-Format"
 )
 
-add_executable(QtMonopoly ${PROJECT_SOURCES})
+
+add_executable(QtMonopoly ${PROJECT_SOURCES} resources.qrc)
+# Tell the compiler where to look for header files
+target_include_directories(QtMonopoly PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+)
+
+target_link_libraries(QtMonopoly PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
 
 target_link_libraries(QtMonopoly PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)

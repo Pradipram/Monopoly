@@ -1,19 +1,13 @@
+
 #include "Space.h"
 
-Space::Space(const QString& name, SpaceType type, int price, int baseRent)
-    : m_name(name)
-    , m_type(type)
-    , m_price(price)
-    , m_baseRent(baseRent)
-    , m_owner(nullptr)
+Space::Space(uint8_t index, const QString &name, SpaceType type, int price, const QList<int> &rent, int houseBuildCost, const QString &colorGroup)
+    : m_index(index), m_name(name), m_type(type), m_price(price), m_rent(rent), m_houseBuildCost(houseBuildCost), m_colorGroup(colorGroup)
 {
+
 }
 
-QString Space::getName() const { return m_name; }
-SpaceType Space::getType() const { return m_type; }
+Space::~Space()
+{
 
-int Space::getPrice() const { return m_price; }
-int Space::getRent() const { return m_baseRent; }
-
-Player* Space::getOwner() const { return m_owner; }
-void Space::setOwner(Player* owner) { m_owner = owner; }
+}

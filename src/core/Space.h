@@ -2,41 +2,41 @@
 #define SPACE_H
 
 #include <QString>
+#include <QList>
 
 enum class SpaceType {
-    Go,
     Property,
+    Chance,
+    Tax,
     Railroad,
     Utility,
-    Chance,
-    CommunityChest,
-    Tax,
-    Jail,         // Just Visiting
-    FreeParking,
+    Go,
+    Jail,
+    Parking,
     GoToJail
 };
 
-class Player; // Forward declaration
-
 class Space {
-public:
-    Space(const QString& name, SpaceType type, int price = 0, int baseRent = 0);
+    public:
+        Space(uint8_t index, const QString &name, SpaceType type, int price, const QList<int> &rent, int houseBuildCost, const QString &colorGroup);
+        ~Space();
 
-    QString getName() const;
-    SpaceType getType() const;
-    
-    int getPrice() const;
-    int getRent() const; // Will eventually need to handle houses/hotels logic
+        uint8_t index() const { return m_index; }
+        SpaceType type() const { return m_type; }
+        QString colorGroup() const { return m_colorGroup; }
+        QString name() const { return m_name; }
+        int price() const { return m_price; }
+        QList<int> rent() const { return m_rent; }
+        int houseBuildCost() const { return m_houseBuildCost; }
 
-    Player* getOwner() const;
-    void setOwner(Player* owner);
-
-private:
-    QString m_name;
-    SpaceType m_type;
-    int m_price;
-    int m_baseRent;
-    Player* m_owner;
+    private:
+        uint8_t m_index;
+        QString m_name;
+        SpaceType m_type;
+        int m_price;
+        QList<int> m_rent;
+        int m_houseBuildCost;
+        QString m_colorGroup;
 };
 
 #endif // SPACE_H
