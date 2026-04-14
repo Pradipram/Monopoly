@@ -1,1 +1,4 @@
 build/
+
+# Ignore Windows Alternate Data Streams
+*:Zone.Identifier
