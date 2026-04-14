@@ -30,6 +30,9 @@ class SpaceItem : public QGraphicsItem
     // These are no longer const so we can change them for corner tiles
     int TILE_WIDTH;
     int TILE_HEIGHT;
+
+    void drawIcon(QPainter* painter, QPixmap* iconToDraw);
+    void drawInvertedTextwithPrice(QPainter* painter);
 };
 
 #endif  // SPACEITEM_H

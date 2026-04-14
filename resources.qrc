@@ -2,5 +2,14 @@
     <qresource prefix="/">
         <file>assets/images/background.jpg</file>
         <file>assets/board_spaces.json</file>
+        <file>assets/images/chance.png</file>
+        <file>assets/images/parking.png</file>
+        <file>assets/images/railroad.png</file>
+        <file>assets/images/prison.png</file>
+        <file>assets/images/powerco.png</file>
+        <file>assets/images/sleep.png</file>
+        <file>assets/images/water.png</file>
+        <file>assets/images/push.png</file>
+        <file>assets/images/tax.png</file>
     </qresource>
 </RCC>

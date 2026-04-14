@@ -24,6 +24,38 @@ QRectF SpaceItem::boundingRect() const
     return QRectF(0, 0, TILE_WIDTH, TILE_HEIGHT);
 }
 
+void SpaceItem::drawIcon(QPainter* painter, QPixmap* iconToDraw)
+{
+    // This function can be used to draw icons for different space types if needed
+    if (iconToDraw != NULL && !iconToDraw->isNull()) {
+        QPixmap scaledIcon =
+            iconToDraw->scaled(50, 50, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+        // Math to calculate the exact center pixel for the image
+        double imgX = (TILE_WIDTH - scaledIcon.width()) / 2.0;
+        double imgY = (TILE_HEIGHT - scaledIcon.height()) / 2.0;
+
+        // Draw the image
+        painter->drawPixmap(imgX, imgY, scaledIcon);
+    } else {
+        qDebug() << "Warning: Could not load Chance image!";
+    }
+}
+
+void SpaceItem::drawInvertedTextwithPrice(QPainter* painter)
+{
+    painter->save();
+    painter->translate(TILE_WIDTH / 2.0, TILE_HEIGHT / 2.0);
+    painter->rotate(180);
+    painter->translate(-TILE_WIDTH / 2.0, -TILE_HEIGHT / 2.0);
+    QRectF invertedTextRect(4, 4, TILE_WIDTH - 8, 30);
+    painter->drawText(invertedTextRect, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap,
+                      m_spaceData->name());
+    QString priceText = QString("$%1").arg(m_spaceData->price());
+    painter->drawText(0, 26, TILE_WIDTH, 15, Qt::AlignCenter, priceText);
+    painter->restore();
+}
+
 void SpaceItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     // 1. Draw the tile background and border
@@ -31,81 +63,201 @@ void SpaceItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setPen(QPen(Qt::black, 2));
     painter->drawRect(boundingRect());
 
-    // 2. Draw the color header (Only for regular properties)
-    if (m_spaceData->type() == SpaceType::Property) {
-        QColor groupColor = Qt::gray;
-        QString cGroup = m_spaceData->colorGroup();
-
-        // Map your JSON strings to actual Qt colors
-        if (cGroup == "Light Blue")
-            groupColor = QColor(173, 216, 230);
-        else if (cGroup == "Pink")
-            groupColor = QColor(255, 105, 180);
-        else if (cGroup == "Orange")
-            groupColor = QColor(255, 165, 0);
-        else if (cGroup == "Red")
-            groupColor = QColor(255, 0, 0);
-        else if (cGroup == "Yellow")
-            groupColor = QColor(255, 255, 0);
-        else if (cGroup == "Green")
-            groupColor = QColor(0, 128, 0);
-        else if (cGroup == "DarkBlue")
-            groupColor = QColor(0, 0, 139);
-
-        painter->setBrush(groupColor);
-        painter->setPen(Qt::black);               // Keep a border around the color bar
-        painter->drawRect(0, 0, TILE_WIDTH, 25);  // Top 25 pixels
-    }
-
-    // 3. Draw the Text
-    painter->setPen(Qt::black);
     QFont font("Arial", 10, QFont::Bold);
-    painter->setFont(font);
 
-    // Give the text a slight margin so it doesn't hit the edges
-    QRectF textRect(4, 28, TILE_WIDTH - 8, 45);
-
-    // If it's a corner tile, push the text down a bit to center it
-    if (m_spaceData->index() % 10 == 0) {
-        textRect.setRect(4, 30, TILE_WIDTH - 8, 60);
-        painter->save();
-        painter->translate(TILE_WIDTH / 2.0, TILE_HEIGHT / 2.0);
-
-        int index = m_spaceData->index();
-        if (index == 0) {
-            painter->rotate(45);
-        } else if (index == 10) {
-            painter->rotate(135);
-        } else if (index == 20) {
-            painter->rotate(225);  // assuming 125 was a typo for 225
-        } else if (index == 30) {
+    switch (m_spaceData->type()) {
+        case SpaceConstants::SpaceType::Go: {
+            painter->save();
+            painter->translate(TILE_WIDTH / 2, TILE_HEIGHT / 2);
             painter->rotate(315);
+            QFont goFont("Arial", 16, QFont::ExtraBold);
+            painter->setFont(goFont);
+            // painter->drawText(boundingRect(), Qt::AlignCenter, "GO");
+            painter->drawText(QRectF(-TILE_WIDTH / 2.0, -40, TILE_WIDTH, 30), Qt::AlignCenter,
+                              "START");
+            painter->drawText(QRectF(-TILE_WIDTH / 2.0, -10, TILE_WIDTH, 20), Qt::AlignCenter,
+                              "+$400");
+
+            painter->rotate(45);
+
+            // Draw a thick filled red arrow pointing left
+            QPen arrowPen(Qt::red, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+            painter->setPen(arrowPen);
+            painter->setBrush(Qt::red);
+
+            // Calculate arrow geometry
+            int x1 = -TILE_WIDTH / 2 + 30;  // Tip of the arrow (left side)
+            int y1 = TILE_HEIGHT / 2 - 20;  // Y center of arrow
+            int ArrowLength = 80;
+            int shaftThickness = 12;
+            int headLength = 20;
+            int headWidth = 26;
+
+            // Draw shaft (body of arrow)
+            painter->drawRect(x1 + headLength, y1 - (shaftThickness / 2), ArrowLength - headLength,
+                              shaftThickness);
+
+            // Draw filled arrowhead (pointing left)
+            QPolygonF arrowHead;
+            arrowHead << QPointF(x1, y1)                                  // pointy tip
+                      << QPointF(x1 + headLength, y1 - (headWidth / 2))   // top back of head
+                      << QPointF(x1 + headLength, y1 + (headWidth / 2));  // bottom back of head
+            painter->drawPolygon(arrowHead);
+
+            painter->restore();
+            break;
         }
 
-        QRectF rotatedTextRect(-textRect.width() / 2.0, -textRect.height() / 2.0, textRect.width(),
-                               textRect.height());
-        painter->drawText(rotatedTextRect, Qt::AlignCenter | Qt::TextWordWrap, m_spaceData->name());
-        painter->restore();
-    } else {
-        painter->drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, m_spaceData->name());
-    }
+        case SpaceConstants::SpaceType::Property: {
+            SpaceConstants::SpaceColorGroup cGroup = m_spaceData->colorGroup();
+            QColor groupColor((cGroup == SpaceConstants::SpaceColorGroup::None)
+                                  ? 0x808080
+                                  : static_cast<uint32_t>(cGroup));
+            painter->setBrush(groupColor);
+            painter->drawRect(0, 0, TILE_WIDTH, 25);
 
-    // 4. Draw the Price (if it has one)
-    if (m_spaceData->price() > 0) {
-        QString priceText = QString("$%1").arg(m_spaceData->price());
-        // Draw the price near the bottom edge
-        painter->drawText(0, TILE_HEIGHT - 18, TILE_WIDTH, 15, Qt::AlignCenter, priceText);
+            painter->setFont(font);
+            QRectF normalTextRect(4, 26, TILE_WIDTH - 8, 30);
+            painter->drawText(normalTextRect, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap,
+                              m_spaceData->name());
+            QString priceText = QString("$%1").arg(m_spaceData->price());
+            painter->drawText(0, 48, TILE_WIDTH, 15, Qt::AlignCenter, priceText);
+            drawInvertedTextwithPrice(painter);
+            break;
+        }
+
+        case SpaceConstants::SpaceType::Tax:
+        case SpaceConstants::SpaceType::WaterCompany:
+        case SpaceConstants::SpaceType::PowerCompany:
+        case SpaceConstants::SpaceType::Railroad: {
+            QRectF textRect(4, 4, TILE_WIDTH - 8, 30);
+            painter->setFont(font);
+            painter->drawText(textRect, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap,
+                              m_spaceData->name());
+            QString priceText = QString("$%1").arg(m_spaceData->price());
+            painter->drawText(0, 25, TILE_WIDTH, 15, Qt::AlignCenter, priceText);
+
+            QPixmap* iconToDraw = NULL;
+            switch (m_spaceData->type()) {
+                case SpaceConstants::SpaceType::Tax: {
+                    static QPixmap taxIcon(":/assets/images/tax.png");
+                    iconToDraw = &taxIcon;
+                    break;
+                }
+                case SpaceConstants::SpaceType::WaterCompany: {
+                    static QPixmap waterIcon(":/assets/images/water.png");
+                    iconToDraw = &waterIcon;
+                    break;
+                }
+                case SpaceConstants::SpaceType::PowerCompany: {
+                    static QPixmap powerIcon(":/assets/images/powerco.png");
+                    iconToDraw = &powerIcon;
+                    break;
+                }
+                case SpaceConstants::SpaceType::Railroad: {
+                    static QPixmap railroadIcon(":/assets/images/railroad.png");
+                    iconToDraw = &railroadIcon;
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+
+            drawIcon(painter, iconToDraw);
+            drawInvertedTextwithPrice(painter);
+            break;
+        }
+
+        case SpaceConstants::SpaceType::Chance:
+        case SpaceConstants::SpaceType::Parking: {
+            QRectF textRect(4, 4, TILE_WIDTH - 8, 40);
+            painter->setFont(font);
+            painter->drawText(textRect, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap,
+                              m_spaceData->name());
+            QPixmap* iconToDraw = NULL;
+            switch (m_spaceData->type()) {
+                case SpaceConstants::SpaceType::Chance: {
+                    static QPixmap chanceIcon(":/assets/images/chance.png");
+                    iconToDraw = &chanceIcon;
+                    break;
+                }
+                case SpaceConstants::SpaceType::Parking: {
+                    static QPixmap parkingIcon(":/assets/images/parking.png");
+                    iconToDraw = &parkingIcon;
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+
+            drawIcon(painter, iconToDraw);
+
+            painter->save();
+            painter->translate(TILE_WIDTH / 2.0, TILE_HEIGHT / 2.0);
+            painter->rotate(180);
+            painter->translate(-TILE_WIDTH / 2.0, -TILE_HEIGHT / 2.0);
+            QRectF invertedTextRect(4, 4, TILE_WIDTH - 8, 40);
+            painter->drawText(invertedTextRect, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap,
+                              m_spaceData->name());
+            painter->restore();
+            break;
+        }
+
+        case SpaceConstants::SpaceType::GoToJail:
+        case SpaceConstants::SpaceType::Rest:
+        case SpaceConstants::SpaceType::Jail: {
+            painter->save();
+            painter->translate(TILE_WIDTH / 2.0, TILE_HEIGHT / 2.0);
+
+            QPixmap* iconToDraw = NULL;
+            switch (m_spaceData->type()) {
+                case SpaceConstants::SpaceType::GoToJail: {
+                    painter->rotate(225);
+                    static QPixmap goToJailIcon(":/assets/images/push.png");
+                    iconToDraw = &goToJailIcon;
+                    break;
+                }
+                case SpaceConstants::SpaceType::Rest: {
+                    painter->rotate(135);
+                    static QPixmap restIcon(":/assets/images/sleep.png");
+                    iconToDraw = &restIcon;
+                    break;
+                }
+                case SpaceConstants::SpaceType::Jail: {
+                    painter->rotate(45);
+                    static QPixmap jailIcon(":/assets/images/prison.png");
+                    iconToDraw = &jailIcon;
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+            painter->translate(-TILE_WIDTH / 2.0, -TILE_HEIGHT / 2.0);
+            QRectF textRect(0, 25, TILE_WIDTH, 40);
+            painter->setFont(font);
+            painter->drawText(textRect, Qt::AlignTop | Qt::AlignHCenter | Qt::TextWordWrap,
+                              m_spaceData->name());
+            drawIcon(painter, iconToDraw);
+
+            painter->restore();
+            break;
+        }
+
+        default: {
+            qDebug("Error: Space '%s' with index %d has an invalid type! Exiting game...",
+                   qPrintable(m_spaceData->name()), m_spaceData->index());
+            break;
+        }
     }
 }
 
 void SpaceItem::setupPositionAndRotation()
 {
     int index = m_spaceData->index();
-
-    // Set the pivot point to the exact center of whatever size the tile is
     setTransformOriginPoint(TILE_WIDTH / 2.0, TILE_HEIGHT / 2.0);
-
-    // Apply rotation based on which side of the board it lives on
     if (index > 0 && index < 10) {
         setRotation(0);  // Bottom row faces up
     } else if (index > 10 && index < 20) {
