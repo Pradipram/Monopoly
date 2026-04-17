@@ -45,7 +45,7 @@ class Space
    public:
     Space(uint8_t index, const QString& name, SpaceConstants::SpaceType type, int price,
           const QList<int>& rent, int houseBuildCost,
-          const SpaceConstants::SpaceColorGroup colorGroup);
+          SpaceConstants::SpaceColorGroup colorGroup);
     ~Space();
 
     uint8_t index() const
@@ -60,7 +60,7 @@ class Space
     {
         return m_colorGroup;
     }
-    QString name() const
+    const QString& name() const
     {
         return m_name;
     }
@@ -68,7 +68,7 @@ class Space
     {
         return m_price;
     }
-    QList<int> rent() const
+    const QList<int>& rent() const
     {
         return m_rent;
     }
@@ -77,7 +77,6 @@ class Space
         return m_houseBuildCost;
     }
 
-   private:
     uint8_t m_index;
     QString m_name;
     SpaceConstants::SpaceType m_type;
@@ -85,6 +84,9 @@ class Space
     QList<int> m_rent;
     int m_houseBuildCost;
     SpaceConstants::SpaceColorGroup m_colorGroup;
+    int ownerId;
+
+   private:
 };
 
 #endif  // SPACE_H

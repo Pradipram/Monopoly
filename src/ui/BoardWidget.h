@@ -1,20 +1,24 @@
 #ifndef BOARDWIDGET_H
 #define BOARDWIDGET_H
 
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
 #include <QWidget>
 
 #include "GameEngine.h"
+#include "PlayerInfoWidget.h"
 #include "PlayerTokenItem.h"
 #include "SpaceItem.h"
-
-class QVBoxLayout;
 
 class BoardWidget : public QWidget
 {
     Q_OBJECT
    public:
     explicit BoardWidget(int botCount, QWidget* parent = nullptr);
-
+    ~BoardWidget();
+    void updateActionPanel();
    signals:
 
    public slots:
@@ -25,11 +29,29 @@ class BoardWidget : public QWidget
     GameEngine* m_gameEngine;
     QMap<int, SpaceItem*> m_tileUIMap;
     QList<PlayerTokenItem*> m_playerTokens;
+    QList<PlayerInfoWidget*> m_playerCards;
+
+    QLabel* m_turnStatusLabel;
+    QHBoxLayout* m_actionButtonsLayout;
+
+    QLabel* m_dieOneLabel;
+    QLabel* m_dieTwoLabel;
+    QPushButton* m_rollButton;
 
     void init_UI();
     void init_board_UI();
     void init_info_UI();
     void init_players_UI(QGraphicsScene* scene);
     void action_layout(QVBoxLayout* layout, QWidget* parent = nullptr);
+
+    void animateTokenSteps(int playerId, int currentSpace, int stepsRemaining);
+
+    QFrame* createDicePanel(QWidget* parent = nullptr);
+
+    void updateTokens();
+    void updatePlayerInfo();
+
+   public slots:
+    void rollDice();
 };
 #endif  // BOARDWIDGET_H

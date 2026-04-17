@@ -1,8 +1,8 @@
 #include "PlayerInfoWidget.h"
 
-PlayerInfoWidget::PlayerInfoWidget(int playerId, QColor playerColor, QString playerName,
+PlayerInfoWidget::PlayerInfoWidget(int playerId, int cash, QColor playerColor, const QString& playerName,
                                    QWidget* parent)
-    : QWidget(parent)
+    : QWidget(parent), m_playerColor(playerColor)
 {
     // Make this widget look like a nice card
     this->setAttribute(Qt::WA_StyledBackground, true);
@@ -25,7 +25,7 @@ PlayerInfoWidget::PlayerInfoWidget(int playerId, QColor playerColor, QString pla
     m_nameLabel->setFont(QFont("Arial", 12));
 
     // Stats: Cash and Properties
-    m_cashLabel = new QLabel("Cash: $3000");
+    m_cashLabel = new QLabel("Cash: $" + QString::number(cash));
     m_cashLabel->setStyleSheet("color: green; font-weight: bold; font-size: 14px;");
 
     m_propertiesLabel = new QLabel("Properties Owned: 0");
@@ -43,4 +43,28 @@ void PlayerInfoWidget::updateCash(int newAmount)
 void PlayerInfoWidget::updatePropertiesInfo(int propertyCount)
 {
     m_propertiesLabel->setText("Properties Owned: " + QString::number(propertyCount));
+}
+
+void PlayerInfoWidget::setActive(bool isActive)
+{
+    if (isActive) {
+        this->setStyleSheet(
+            "#PlayerCard {"
+            "  background-color: #e6f7ff;"
+            "  border-radius: 8px;"
+            "  border: 2px solid #0055ff;"
+            "  border-left: 10px solid " +
+            m_playerColor.name() +
+            ";"
+            "}");
+    } else {
+        this->setStyleSheet(
+            "#PlayerCard {"
+            "  background-color: white;"
+            "  border-radius: 8px;"
+            "  border-left: 10px solid " +
+            m_playerColor.name() +
+            ";"
+            "}");
+    }
 }

@@ -12,8 +12,8 @@ cd build
 # 2. Configure the CMake project (points to the parent directory where CMakeLists.txt is)
 cmake ..
 
-# 3. Compile the project
-cmake --build . 
+# 3. Compile the project using all available CPU cores
+cmake --build . -j$(nproc)
 
 echo "✅ Build successful!"
 echo "🚀 Launching game..."

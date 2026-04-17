@@ -3,18 +3,25 @@
 
 #include <QList>
 
+#include "Player.h"
 #include "Space.h"
 
 class GameEngine
 {
-    public:
-        GameEngine();
-        ~GameEngine();
+   public:
+    GameEngine(int localPlayerCount, int botCount);
+    ~GameEngine();
 
-        void loadBoardData();
-        const QList<Space*>& getSpacesList();
-    private:
+    const QList<Space*>& getSpacesList();
+    int m_currentPlayerTurn;
+
+    int m_localPlayerCount;
+    int m_botCount;
+    QVector<Player*> m_players;
     QList<Space*> m_spaces;
+
+    void loadBoardData();
+    void advanceTurn(int steps);
 };
 
-#endif // GAMEENGINE_H
+#endif  // GAMEENGINE_H

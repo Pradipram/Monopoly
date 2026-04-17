@@ -7,15 +7,26 @@
 #include <QJsonObject>
 #include <QMetaEnum>
 
-GameEngine::GameEngine()
+GameEngine::GameEngine(int localPlayerCount, int botCount)
+    : m_localPlayerCount(localPlayerCount), m_botCount(botCount)
 {
     qDebug() << "Initializing Game Engine...";
     loadBoardData();
+    for (int i = 0; i < m_localPlayerCount; i++) {
+        Player* newPlayer = new Player(i, QString("Player %1").arg(i + 1), false);
+        m_players.append(newPlayer);
+    }
+    for (int i = 0; i < m_botCount; i++) {
+        Player* newPlayer = new Player(i + m_localPlayerCount, QString("Bot %1").arg(i + 1), true);
+        m_players.append(newPlayer);
+    }
+    m_currentPlayerTurn = 0;  // Start with the first player
 }
 
 GameEngine::~GameEngine()
 {
     qDeleteAll(m_spaces);
+    qDeleteAll(m_players);
 }
 
 void GameEngine::loadBoardData()
@@ -66,6 +77,13 @@ void GameEngine::loadBoardData()
     }
 
     qDebug() << "Successfully loaded" << m_spaces.size() << "spaces into memory!";
+}
+
+void GameEngine::advanceTurn(int steps)
+{
+    m_players[m_currentPlayerTurn]->m_landedSpaceIndex =
+        (m_players[m_currentPlayerTurn]->m_landedSpaceIndex + steps) % m_spaces.size();
+    m_currentPlayerTurn = (m_currentPlayerTurn + 1) % m_players.size();
 }
 
 const QList<Space*>& GameEngine::getSpacesList()
