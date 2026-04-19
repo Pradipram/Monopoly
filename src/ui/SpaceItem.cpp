@@ -4,8 +4,13 @@
 #include <QFont>
 #include <QGraphicsSceneMouseEvent>
 
+#include "const.h"
+
 SpaceItem::SpaceItem(Space* spaceData, QGraphicsItem* parent)
-    : QGraphicsItem(parent), m_spaceData(spaceData)
+    : QGraphicsItem(parent),
+      m_spaceData(spaceData),
+      m_showOwnerIndicator(true),
+      m_showInvertedText(true)
 {
     // Update the sizes to fill the 1000x1000 board
     if (m_spaceData->index() % 10 == 0) {
@@ -22,6 +27,18 @@ SpaceItem::SpaceItem(Space* spaceData, QGraphicsItem* parent)
 QRectF SpaceItem::boundingRect() const
 {
     return QRectF(0, 0, TILE_WIDTH, TILE_HEIGHT);
+}
+
+void SpaceItem::setShowOwnerIndicator(bool showOwnerIndicator)
+{
+    m_showOwnerIndicator = showOwnerIndicator;
+    update();
+}
+
+void SpaceItem::setShowInvertedText(bool showInvertedText)
+{
+    m_showInvertedText = showInvertedText;
+    update();
 }
 
 void SpaceItem::drawIcon(QPainter* painter, QPixmap* iconToDraw)
@@ -127,7 +144,22 @@ void SpaceItem::drawPropertySpace(QPainter* painter, const QFont& font)
     QString priceText = QString("$%1").arg(m_spaceData->price());
     painter->drawText(0, 48, TILE_WIDTH, 15, Qt::AlignCenter, priceText);
 
-    drawInvertedTextwithPrice(painter);
+    // Draw ownership indicator at bottom of property tile (if owned)
+    if (m_showOwnerIndicator && m_spaceData->ownerId != Constants::UNOWNED) {
+        // Player colors: 0=red, 1=blue, 2=green, 3=yellow, 4=cyan, 5=magenta, 6=orange, 7=purple
+        QList<QColor> colors = {Qt::red,  Qt::blue,    Qt::green,           Qt::yellow,
+                                Qt::cyan, Qt::magenta, QColor(255, 165, 0), QColor(128, 0, 128)};
+        int colorIdx = m_spaceData->ownerId % colors.size();
+
+        painter->setBrush(colors[colorIdx]);
+        painter->setPen(QPen(Qt::black, 1));
+        // Draw a small colored rect on the inner edge of the property
+        painter->drawRect(TILE_WIDTH / 2.0 - 15, TILE_HEIGHT - 12, 30, 10);
+    }
+
+    if (m_showInvertedText) {
+        drawInvertedTextwithPrice(painter);
+    }
 }
 
 void SpaceItem::drawPricedIconSpace(QPainter* painter, const QFont& font)
@@ -167,7 +199,9 @@ void SpaceItem::drawPricedIconSpace(QPainter* painter, const QFont& font)
     }
 
     drawIcon(painter, iconToDraw);
-    drawInvertedTextwithPrice(painter);
+    if (m_showInvertedText) {
+        drawInvertedTextwithPrice(painter);
+    }
 }
 
 void SpaceItem::drawIconSpace(QPainter* painter, const QFont& font)
@@ -194,7 +228,9 @@ void SpaceItem::drawIconSpace(QPainter* painter, const QFont& font)
     }
 
     drawIcon(painter, iconToDraw);
-    drawInvertedText(painter);
+    if (m_showInvertedText) {
+        drawInvertedText(painter);
+    }
 }
 
 void SpaceItem::drawCornerIconSpace(QPainter* painter, const QFont& font, const QString& imagePath)
@@ -277,6 +313,9 @@ void SpaceItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
                    qPrintable(m_spaceData->name()), m_spaceData->index());
             break;
     }
+    if (m_showOwnerIndicator) {
+        drawOwnerIndicator(painter);
+    }
 }
 
 void SpaceItem::setupPositionAndRotation()
@@ -301,4 +340,54 @@ void SpaceItem::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
     qDebug() << "You clicked on:" << m_spaceData->name();
     event->accept();
+}
+
+void SpaceItem::drawOwnerIndicator(QPainter* painter)
+{
+    // If it's unowned (usually -1), don't draw anything
+    if (m_spaceData->ownerId == -1) return;
+
+    QColor ownerColor;
+    switch (m_spaceData->ownerId) {
+        case 0:
+            ownerColor = Qt::red;
+            break;
+        case 1:
+            ownerColor = Qt::blue;
+            break;
+        case 2:
+            ownerColor = Qt::green;
+            break;
+        case 3:
+            ownerColor = Qt::yellow;
+            break;
+        case 4:
+            ownerColor = Qt::cyan;
+            break;
+        case 5:
+            ownerColor = Qt::magenta;
+            break;
+        case 6:
+            ownerColor = QColor(255, 165, 0);
+            break;  // Orange
+        case 7:
+            ownerColor = QColor(128, 0, 128);
+            break;  // Purple
+        default:
+            ownerColor = Qt::black;
+            break;
+    }
+
+    painter->save();
+    painter->setBrush(ownerColor);
+    painter->setPen(QPen(Qt::black, 1));  // Thin black border around the triangle
+
+    // Create a triangle pointing upwards from the bottom-center of the tile
+    QPolygonF triangle;
+    triangle << QPointF(TILE_WIDTH / 2.0 - 20, TILE_HEIGHT)   // Bottom Left
+             << QPointF(TILE_WIDTH / 2.0 + 20, TILE_HEIGHT)   // Bottom Right
+             << QPointF(TILE_WIDTH / 2.0, TILE_HEIGHT - 20);  // Top Peak
+
+    painter->drawPolygon(triangle);
+    painter->restore();
 }

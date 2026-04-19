@@ -32,7 +32,7 @@ class BoardWidget : public QWidget
     QList<PlayerInfoWidget*> m_playerCards;
 
     QLabel* m_turnStatusLabel;
-    QHBoxLayout* m_actionButtonsLayout;
+    // QHBoxLayout* m_actionButtonsLayout;
 
     QLabel* m_dieOneLabel;
     QLabel* m_dieTwoLabel;
@@ -50,6 +50,8 @@ class BoardWidget : public QWidget
 
     void updateTokens();
     void updatePlayerInfo();
+
+    void handlePostMoveActions();
 
    public slots:
     void rollDice();

@@ -35,6 +35,7 @@ add_custom_target(format
 add_executable(QtMonopoly ${PROJECT_SOURCES} resources.qrc)
 # Tell the compiler where to look for header files
 target_include_directories(QtMonopoly PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
 )

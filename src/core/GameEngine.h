@@ -22,6 +22,10 @@ class GameEngine
 
     void loadBoardData();
     void advanceTurn(int steps);
+
+    void buyLandedProperty();
+    void changePlayerTurn();
+    void payRent();
 };
 
 #endif  // GAMEENGINE_H

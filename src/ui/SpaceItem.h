@@ -10,6 +10,8 @@ class SpaceItem : public QGraphicsItem
 {
    public:
     explicit SpaceItem(Space* spaceData, QGraphicsItem* parent = nullptr);
+    void setShowOwnerIndicator(bool showOwnerIndicator);
+    void setShowInvertedText(bool showInvertedText);
 
     // Required by Qt to know the exact clickable/drawable bounds
     QRectF boundingRect() const override;
@@ -41,6 +43,11 @@ class SpaceItem : public QGraphicsItem
     void drawPricedIconSpace(QPainter* painter, const QFont& font);
     void drawIconSpace(QPainter* painter, const QFont& font);
     void drawCornerIconSpace(QPainter* painter, const QFont& font, const QString& imagePath);
+
+    void drawOwnerIndicator(QPainter* painter);
+
+    bool m_showOwnerIndicator;
+    bool m_showInvertedText;
 };
 
 #endif  // SPACEITEM_H

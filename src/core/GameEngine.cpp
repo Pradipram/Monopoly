@@ -83,10 +83,37 @@ void GameEngine::advanceTurn(int steps)
 {
     m_players[m_currentPlayerTurn]->m_landedSpaceIndex =
         (m_players[m_currentPlayerTurn]->m_landedSpaceIndex + steps) % m_spaces.size();
-    m_currentPlayerTurn = (m_currentPlayerTurn + 1) % m_players.size();
+    // m_currentPlayerTurn = (m_currentPlayerTurn + 1) % m_players.size();
+}
+
+void GameEngine::buyLandedProperty()
+{
+    Player* currentPlayer = m_players[m_currentPlayerTurn];
+    Space* landedSpace = m_spaces[currentPlayer->m_landedSpaceIndex];
+
+    currentPlayer->m_cash -= landedSpace->price();
+    currentPlayer->m_ownedSpaces.append(landedSpace);
+    landedSpace->ownerId = currentPlayer->m_id;
 }
 
 const QList<Space*>& GameEngine::getSpacesList()
 {
     return m_spaces;
+}
+
+void GameEngine::changePlayerTurn()
+{
+    m_currentPlayerTurn = (m_currentPlayerTurn + 1) % m_players.size();
+}
+
+void GameEngine::payRent()
+{
+    Player* currentPlayer = m_players[m_currentPlayerTurn];
+    Space* landedSpace = m_spaces[currentPlayer->m_landedSpaceIndex];
+
+    Player* ownerPlayer = m_players[landedSpace->ownerId];
+    int houseCnt = landedSpace->m_houseCount;
+    int rentAmount = landedSpace->rent().at(houseCnt);
+    currentPlayer->m_cash -= rentAmount;
+    ownerPlayer->m_cash += rentAmount;
 }

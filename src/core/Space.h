@@ -44,8 +44,7 @@ class Space
 {
    public:
     Space(uint8_t index, const QString& name, SpaceConstants::SpaceType type, int price,
-          const QList<int>& rent, int houseBuildCost,
-          SpaceConstants::SpaceColorGroup colorGroup);
+          const QList<int>& rent, int houseBuildCost, SpaceConstants::SpaceColorGroup colorGroup);
     ~Space();
 
     uint8_t index() const
@@ -85,6 +84,7 @@ class Space
     int m_houseBuildCost;
     SpaceConstants::SpaceColorGroup m_colorGroup;
     int ownerId;
+    int m_houseCount;
 
    private:
 };

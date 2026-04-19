@@ -1,130 +1,26 @@
 #include "BoardWidget.h"
 
+#include <QEasingCurve>
 #include <QFrame>
 #include <QGraphicsDropShadowEffect>
+#include <QGraphicsRectItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QPainter>
+#include <QPropertyAnimation>
 #include <QPushButton>
 #include <QRandomGenerator>
 #include <QScrollArea>
 #include <QTimer>
 #include <QVariantAnimation>
-#include <QEasingCurve>
 
+#include "BoardUiUtils.h"
+#include "BuyPropertyDialog.h"
+#include "PayRentDialog.h"
 #include "PlayerInfoWidget.h"
 #include "SpaceItem.h"
-
-namespace
-{
-
-QPointF tileCenterForIndex(int index, int maxPos, int cornerSize, int regSize)
-{
-    const qreal cornerHalf = cornerSize / 2.0;
-    const qreal regHalf = regSize / 2.0;
-
-    if (index == 0) {
-        return {maxPos - cornerHalf, maxPos - cornerHalf};
-    }
-    if (index > 0 && index < 10) {
-        return {maxPos - cornerSize - regHalf - ((index - 1) * regSize), maxPos - cornerHalf};
-    }
-    if (index == 10) {
-        return {cornerHalf, maxPos - cornerHalf};
-    }
-    if (index > 10 && index < 20) {
-        return {cornerHalf, maxPos - cornerSize - regHalf - ((index - 11) * regSize)};
-    }
-    if (index == 20) {
-        return {cornerHalf, cornerHalf};
-    }
-    if (index > 20 && index < 30) {
-        return {cornerSize + regHalf + ((index - 21) * regSize), cornerHalf};
-    }
-    if (index == 30) {
-        return {maxPos - cornerHalf, cornerHalf};
-    }
-    if (index > 30 && index < 40) {
-        return {maxPos - cornerHalf, cornerSize + regHalf + ((index - 31) * regSize)};
-    }
-
-    return {};
-}
-
-QPixmap createDiePixmap(int dieValue, int size)
-{
-    QPixmap pixmap(size, size);
-    pixmap.fill(Qt::transparent);
-
-    QPainter painter(&pixmap);
-    painter.setRenderHint(QPainter::Antialiasing, true);
-
-    QRectF dieRect(1.0, 1.0, size - 2.0, size - 2.0);
-    painter.setBrush(Qt::white);
-    painter.setPen(QPen(QColor(30, 30, 30), 2));
-    painter.drawRoundedRect(dieRect, 10, 10);
-
-    const qreal left = size * 0.23;
-    const qreal center = size * 0.50;
-    const qreal right = size * 0.77;
-    const qreal top = size * 0.23;
-    const qreal middle = size * 0.50;
-    const qreal bottom = size * 0.77;
-    const qreal pipRadius = size * 0.09;
-
-    auto drawPip = [&painter, pipRadius](qreal x, qreal y) {
-        painter.setBrush(QColor(30, 30, 30));
-        painter.setPen(Qt::NoPen);
-        painter.drawEllipse(QPointF(x, y), pipRadius, pipRadius);
-    };
-
-    switch (dieValue) {
-        case 1:
-            drawPip(center, middle);
-            break;
-        case 2:
-            drawPip(left, top);
-            drawPip(right, bottom);
-            break;
-        case 3:
-            drawPip(left, top);
-            drawPip(center, middle);
-            drawPip(right, bottom);
-            break;
-        case 4:
-            drawPip(left, top);
-            drawPip(right, top);
-            drawPip(left, bottom);
-            drawPip(right, bottom);
-            break;
-        case 5:
-            drawPip(left, top);
-            drawPip(right, top);
-            drawPip(center, middle);
-            drawPip(left, bottom);
-            drawPip(right, bottom);
-            break;
-        case 6:
-            drawPip(left, top);
-            drawPip(right, top);
-            drawPip(left, middle);
-            drawPip(right, middle);
-            drawPip(left, bottom);
-            drawPip(right, bottom);
-            break;
-        default:
-            drawPip(center, middle);
-            break;
-    }
-
-    return pixmap;
-}
-
-void setDieFace(QLabel* dieLabel, int dieValue);
-
-}  // namespace
+#include "const.h"
 
 QFrame* BoardWidget::createDicePanel(QWidget* parent)
 {
@@ -145,8 +41,8 @@ QFrame* BoardWidget::createDicePanel(QWidget* parent)
     m_dieTwoLabel = new QLabel(dicePanel);
     m_dieOneLabel->setAlignment(Qt::AlignCenter);
     m_dieTwoLabel->setAlignment(Qt::AlignCenter);
-    m_dieOneLabel->setFixedSize(72, 72);
-    m_dieTwoLabel->setFixedSize(72, 72);
+    m_dieOneLabel->setFixedSize(Constants::DICE_UI_SIZE, Constants::DICE_UI_SIZE);
+    m_dieTwoLabel->setFixedSize(Constants::DICE_UI_SIZE, Constants::DICE_UI_SIZE);
     m_dieOneLabel->setStyleSheet(
         "background-color: transparent; border: none; margin: 0px; padding: 0px;");
     m_dieTwoLabel->setStyleSheet(
@@ -187,45 +83,36 @@ void BoardWidget::rollDice()
     QTimer* animationTimer = new QTimer(this);
     animationTimer->setInterval(80);
 
-    QObject::connect(animationTimer, &QTimer::timeout, this,
-                     [this, animationTimer, frame = 0]() mutable {
-                         setDieFace(m_dieOneLabel, QRandomGenerator::global()->bounded(1, 7));
-                         setDieFace(m_dieTwoLabel, QRandomGenerator::global()->bounded(1, 7));
+    QObject::connect(
+        animationTimer, &QTimer::timeout, this, [this, animationTimer, frame = 0]() mutable {
+            setDieFace(m_dieOneLabel, QRandomGenerator::global()->bounded(1, 7));
+            setDieFace(m_dieTwoLabel, QRandomGenerator::global()->bounded(1, 7));
 
-                         frame++;
-                         if (frame >= 10) {
-                             animationTimer->stop();
+            frame++;
+            if (frame >= 10) {
+                animationTimer->stop();
 
-                             int dieOneNumber = QRandomGenerator::global()->bounded(1, 7);
-                             int dieTwoNumber = QRandomGenerator::global()->bounded(1, 7);
-                             setDieFace(m_dieOneLabel, dieOneNumber);
-                             setDieFace(m_dieTwoLabel, dieTwoNumber);
+                int dieOneNumber = QRandomGenerator::global()->bounded(1, 7);
+                int dieTwoNumber = QRandomGenerator::global()->bounded(1, 7);
+                setDieFace(m_dieOneLabel, dieOneNumber);
+                setDieFace(m_dieTwoLabel, dieTwoNumber);
 
-                             int steps = dieOneNumber + dieTwoNumber;
-                             int currPlayerIdx = m_gameEngine->m_currentPlayerTurn;
-                             int startSpace = m_gameEngine->m_players[currPlayerIdx]->m_landedSpaceIndex;
-                             
-                             // Let the engine update state immediately
-                             m_gameEngine->advanceTurn(steps);
-                             
-                             // Start the stepping animation instead of calling updateTokens() directly
-                             animateTokenSteps(currPlayerIdx, startSpace, steps);
+                int steps = dieOneNumber + dieTwoNumber;
+                int currPlayerIdx = m_gameEngine->m_currentPlayerTurn;
+                int startSpace = m_gameEngine->m_players[currPlayerIdx]->m_landedSpaceIndex;
 
-                             animationTimer->deleteLater();
-                         }
-                     });
+                // Let the engine update state immediately
+                m_gameEngine->advanceTurn(steps);
+
+                // Start the stepping animation instead of calling updateTokens() directly
+                animateTokenSteps(currPlayerIdx, startSpace, steps);
+
+                animationTimer->deleteLater();
+            }
+        });
 
     animationTimer->start();
 }
-
-namespace
-{
-void setDieFace(QLabel* dieLabel, int dieValue)
-{
-    dieLabel->setPixmap(createDiePixmap(dieValue, dieLabel->width()));
-}
-
-}  // namespace
 
 BoardWidget::BoardWidget(int botCount, QWidget* parent) : QWidget(parent), m_botCount(botCount)
 {
@@ -264,10 +151,9 @@ void BoardWidget::init_board_UI()
     // 1. Change "border: 2px solid gray;" to "border: none;"
     view->setStyleSheet(
         "#gameBoard {"
-        "  background-color: rgb(255, 255, 255);"
+        "  background-color: rgb(245, 249, 246);"
         "  border-radius: 10px;"
         "  border: none;"
-        "  border-image: url(:/background.jpg) 0 0 0 0 stretch stretch;"
         "}");
 
     view->setRenderHint(QPainter::Antialiasing);
@@ -283,21 +169,18 @@ void BoardWidget::init_board_UI()
     view->setGraphicsEffect(shadow);
     QList<Space*> allSpaces = m_gameEngine->getSpacesList();
 
-    const int maxPos = 1000;
-    const int cornerSize = 140;
-    const int regSize = 80;
-
     for (Space* spaceLogic : allSpaces) {
         SpaceItem* visualTile = new SpaceItem(spaceLogic);
         int index = spaceLogic->index();
 
-        const QPointF center = tileCenterForIndex(index, maxPos, cornerSize, regSize);
+        const QPointF center = tileCenterForIndex(index);
         const qreal centerX = center.x();
         const qreal centerY = center.y();
 
         // To set the item's exact position, we subtract half its width/height from the center
-        int tileWidth = (index % 10 == 0) ? cornerSize : regSize;
-        int tileHeight = cornerSize;  // Height is always 140 facing inward
+        int tileWidth =
+            (index % 10 == 0) ? Constants::CORNER_TILE_SIZE : Constants::REGULAR_TILE_SIZE;
+        int tileHeight = Constants::CORNER_TILE_SIZE;  // Height is always 140 facing inward
 
         visualTile->setPos(centerX - (tileWidth / 2.0), centerY - (tileHeight / 2.0));
 
@@ -306,6 +189,42 @@ void BoardWidget::init_board_UI()
 
         m_tileUIMap.insert(index, visualTile);
     }
+
+    // Add rules to the center of the board
+    QString rulesString =
+        "RULES (Double Dice Rolls):\n"
+        "Roll 2: Advance to GO! (Collect $400)\n"
+        "Roll 3: Bank error in your favor. Collect $200.\n"
+        "Roll 4: Bank pays you a dividend of $50.\n"
+        "Roll 5: Advance to the nearest Railroad.\n"
+        "Roll 6: Speeding fine! Pay $15.\n"
+        "Roll 7: Dividend Paid. Collect $50 from the Bank.\n"
+        "Roll 8: Make general repairs on properties (Pay $25/house).\n"
+        "Roll 9: Advance to the nearest Water Cooperation.\n"
+        "Roll 10: Elected Chairman of the Board. Pay each player $50.\n"
+        "Roll 11: Real Estate Boom! Bank pays you $25/property.\n"
+        "Roll 12: Go directly to Jail. Do not pass GO.";
+
+    QFont rulesFont("Arial", 10, QFont::Bold);
+
+    // Draw one clean rules panel in the top-left of the inner board area.
+    QGraphicsTextItem* rulesText = scene->addText(rulesString, rulesFont);
+    rulesText->setDefaultTextColor(QColor(43, 84, 61));
+
+    const QRectF textRect = rulesText->boundingRect();
+    const qreal panelPadding = 12.0;
+    const qreal panelWidth = textRect.width() + (panelPadding * 2);
+    const qreal panelHeight = textRect.height() + (panelPadding * 2);
+    const QRectF panelRect((1000 - panelWidth) / 2.0, (1000 - panelHeight) / 2.0, panelWidth,
+                           panelHeight);
+
+    QGraphicsRectItem* rulesPanel =
+        scene->addRect(panelRect, QPen(QColor(66, 120, 87), 2), QBrush(QColor(245, 249, 246, 235)));
+    rulesPanel->setZValue(10);
+
+    rulesText->setPos(panelRect.left() + panelPadding, panelRect.top() + panelPadding);
+    rulesText->setZValue(11);
+
     init_players_UI(scene);
 }
 
@@ -321,19 +240,8 @@ void BoardWidget::init_players_UI(QGraphicsScene* scene)
         PlayerTokenItem* token = new PlayerTokenItem(i);
 
         // 3. Grid-Based Position Offset Math
-        // Arranges up to 9 tokens in a 3x3 grid
-        int col = i % 3;
-        int row = i / 3;
-
-        double dx = (col - 1) * 25;  // Spacing of 25 pixels between columns
-        double dy = (row - 1) * 25;  // Spacing of 25 pixels between rows
-
-        // 4. Center the token's own bounding box on that new shifted coordinate
-        // Since we hardcoded the circle to be 24x24, half of that is 12
-        double tokenOffsetX = 12.0;
-        double tokenOffsetY = 12.0;
-
-        token->setPos(startCenter.x() + dx - tokenOffsetX, startCenter.y() + dy - tokenOffsetY);
+        QPointF targetPos = getTokenTargetPos(i, startCenter);
+        token->setPos(targetPos);
 
         // 5. Add to scene and save to our list
         scene->addItem(token);
@@ -443,26 +351,22 @@ void BoardWidget::action_layout(QVBoxLayout* layout, QWidget* parent)
         "  background-color: white;"
         "  border: 2px solid rgb(66, 120, 87);"
         "  border-radius: 8px;"
+        "  padding: 8px;"  // Added padding for a cleaner look
         "}");
 
     QVBoxLayout* actionLayout = new QVBoxLayout(actionPanel);
 
-    // 1. Initialize the Label (Empty for now), save to member variable
+    // Initialize the Label and save to member variable
     m_turnStatusLabel = new QLabel("", actionPanel);
     m_turnStatusLabel->setAlignment(Qt::AlignCenter);
-
-    // 2. Create a sub-widget just to hold our dynamic buttons
-    QWidget* buttonContainer = new QWidget(actionPanel);
-    m_actionButtonsLayout = new QHBoxLayout(buttonContainer);
-    m_actionButtonsLayout->setContentsMargins(0, 0, 0, 0);
+    m_turnStatusLabel->setFont(QFont("Arial", 11));  // Make it slightly larger
 
     // Add them to the panel
     actionLayout->addWidget(m_turnStatusLabel);
-    actionLayout->addWidget(buttonContainer);
 
     layout->addWidget(actionPanel);
 
-    // 3. Immediately trigger an update to load Player 1's starting info
+    // Immediately trigger an update to load Player 1's starting info
     updateActionPanel();
     updatePlayerInfo();
 }
@@ -473,57 +377,32 @@ void BoardWidget::updateActionPanel()
     int currPlayerIdx = m_gameEngine->m_currentPlayerTurn;
     Player* currPlayer = m_gameEngine->m_players[currPlayerIdx];
 
-    // Assuming you have a way to get the space the player is currently sitting on
-    // Space* landedSpace = m_gameEngine->getSpacesList()[currPlayer->m_position];
+    // 2. Get the space the player is currently sitting on
     Space* landedSpace = m_gameEngine->m_spaces[currPlayer->m_landedSpaceIndex];
 
-    // 2. Update the Text
+    // 3. Update the Text
     QString statusText = QString("<b>%1's Turn</b><br>Landed on: %2")
                              .arg(currPlayer->m_name)
                              .arg(landedSpace->name());
     m_turnStatusLabel->setText(statusText);
-
-    // 3. CLEAR OLD BUTTONS (Crucial step in Qt!)
-    // If you don't do this, you'll get 50 buttons stacked up after a few turns.
-    QLayoutItem* child;
-    while ((child = m_actionButtonsLayout->takeAt(0)) != nullptr) {
-        delete child->widget();  // Delete the physical button
-        delete child;            // Delete the layout reference
-    }
-
-    // 4. GENERATE NEW BUTTONS based on game logic
-    QString btnStyle =
-        "QPushButton { background-color: #2b5c40; color: white; border-radius: 4px; padding: 6px; "
-        "font-weight: bold; }";
-
-    // Example Logic: Unowned Property -> Show "Buy" Button
-    if (landedSpace->type() == SpaceConstants::SpaceType::Property && landedSpace->ownerId == -1) {
-        QPushButton* buyBtn = new QPushButton(QString("Buy ($%1)").arg(landedSpace->price()));
-        buyBtn->setStyleSheet(btnStyle);
-        m_actionButtonsLayout->addWidget(buyBtn);
-
-        // Connect the button to your buy logic (you will write this later)
-        // connect(buyBtn, &QPushButton::clicked, this, &BoardWidget::handleBuyProperty);
-    }
-
-    // Example Logic: Owned by someone else -> Show "Pay Rent" Button
-    else if (landedSpace->type() == SpaceConstants::SpaceType::Property &&
-             landedSpace->ownerId != currPlayer->m_id) {
-        QPushButton* payBtn = new QPushButton("Pay Rent");
-        payBtn->setStyleSheet(
-            "QPushButton { background-color: #a83232; color: white; border-radius: 4px; padding: "
-            "6px; font-weight: bold; }");  // Red for paying money
-        m_actionButtonsLayout->addWidget(payBtn);
-    }
 }
 
 void BoardWidget::animateTokenSteps(int playerId, int currentSpace, int stepsRemaining)
 {
     if (stepsRemaining <= 0) {
         // Once stepping is done, do final UI updates
+        handlePostMoveActions();
         updateActionPanel();
         updatePlayerInfo();
-        m_rollButton->setEnabled(true);
+        int nextPlayerIdx = m_gameEngine->m_currentPlayerTurn;
+        Player* nextPlayer = m_gameEngine->m_players[nextPlayerIdx];
+
+        if (nextPlayer->m_isBot) {
+            m_rollButton->setEnabled(false);
+            QTimer::singleShot(1500, this, &BoardWidget::rollDice);
+        } else {
+            m_rollButton->setEnabled(true);
+        }
         return;
     }
 
@@ -541,35 +420,25 @@ void BoardWidget::animateTokenSteps(int playerId, int currentSpace, int stepsRem
     }
 
     QPointF tileCenter = visualTile->sceneBoundingRect().center();
-            
-    // Grid spacing logic
-    int col = playerId % 3;
-    int row = playerId / 3;
 
-    double dx = (col - 1) * 25;  
-    double dy = (row - 1) * 25;  
-
-    double tokenOffsetX = 12.0;
-    double tokenOffsetY = 12.0;
-
-    QPointF targetPos(tileCenter.x() + dx - tokenOffsetX, tileCenter.y() + dy - tokenOffsetY);
+    QPointF targetPos = getTokenTargetPos(playerId, tileCenter);
 
     QVariantAnimation* anim = new QVariantAnimation(this);
-    anim->setDuration(250); // fast transition per tile
+    anim->setDuration(250);  // fast transition per tile
     anim->setStartValue(token->pos());
     anim->setEndValue(targetPos);
     anim->setEasingCurve(QEasingCurve::InOutQuad);
-    
-    QObject::connect(anim, &QVariantAnimation::valueChanged, [token](const QVariant& value) {
-        token->setPos(value.toPointF());
-    });
-    
+
+    QObject::connect(anim, &QVariantAnimation::valueChanged,
+                     [token](const QVariant& value) { token->setPos(value.toPointF()); });
+
     // When this tile animation finishes, trigger the next step
-    QObject::connect(anim, &QVariantAnimation::finished, this, [this, anim, playerId, nextSpace, stepsRemaining]() {
-        anim->deleteLater();
-        animateTokenSteps(playerId, nextSpace, stepsRemaining - 1);
-    });
-    
+    QObject::connect(anim, &QVariantAnimation::finished, this,
+                     [this, anim, playerId, nextSpace, stepsRemaining]() {
+                         anim->deleteLater();
+                         animateTokenSteps(playerId, nextSpace, stepsRemaining - 1);
+                     });
+
     anim->start();
 }
 
@@ -585,29 +454,18 @@ void BoardWidget::updateTokens()
         SpaceItem* visualTile = m_tileUIMap[spaceIndex];
         if (visualTile) {
             QPointF tileCenter = visualTile->sceneBoundingRect().center();
-            
-            // Reapply grid spacing logic
-            int col = playerId % 3;
-            int row = playerId / 3;
-
-            double dx = (col - 1) * 25;  
-            double dy = (row - 1) * 25;  
-
-            double tokenOffsetX = 12.0;
-            double tokenOffsetY = 12.0;
-
-            QPointF targetPos(tileCenter.x() + dx - tokenOffsetX, tileCenter.y() + dy - tokenOffsetY);
+            QPointF targetPos = getTokenTargetPos(playerId, tileCenter);
 
             if (token->pos() != targetPos) {
                 QVariantAnimation* anim = new QVariantAnimation(this);
-                anim->setDuration(600); // Smooth 600ms transition
+                anim->setDuration(600);  // Smooth 600ms transition
                 anim->setStartValue(token->pos());
                 anim->setEndValue(targetPos);
                 anim->setEasingCurve(QEasingCurve::InOutQuad);
-                
-                QObject::connect(anim, &QVariantAnimation::valueChanged, [token](const QVariant& value) {
-                    token->setPos(value.toPointF());
-                });
+
+                QObject::connect(
+                    anim, &QVariantAnimation::valueChanged,
+                    [token](const QVariant& value) { token->setPos(value.toPointF()); });
                 QObject::connect(anim, &QVariantAnimation::finished, anim, &QObject::deleteLater);
                 anim->start();
             } else {
@@ -621,8 +479,42 @@ void BoardWidget::updatePlayerInfo()
 {
     int currPlayerIdx = m_gameEngine->m_currentPlayerTurn;
     for (int i = 0; i < m_playerCards.size(); i++) {
+        Player* player = m_gameEngine->m_players[i];
+
         m_playerCards[i]->setActive(i == currPlayerIdx);
-        m_playerCards[i]->updateCash(m_gameEngine->m_players[i]->m_cash);
-        // You could also update properties if that changes.
+        m_playerCards[i]->updateCash(player->m_cash);
+        m_playerCards[i]->setOwnedProperties(player->m_ownedSpaces);
     }
+}
+
+void BoardWidget::handlePostMoveActions()
+{
+    // 1. Get the current state from your Game Engine
+    int currPlayerIdx = m_gameEngine->m_currentPlayerTurn;
+    Player* currPlayer = m_gameEngine->m_players[currPlayerIdx];
+
+    // 2. Get the space the player is currently sitting on
+    Space* landedSpace = m_gameEngine->m_spaces[currPlayer->m_landedSpaceIndex];
+
+    if (landedSpace->type() == SpaceConstants::SpaceType::Property) {
+        if (landedSpace->ownerId == Constants::UNOWNED) {
+            BuyPropertyDialog dialog(currPlayer, landedSpace, this);
+            if (dialog.exec() == QDialog::Accepted) {
+                m_gameEngine->buyLandedProperty();
+
+                // Force custom redraw of that tile specifically so new owner color appears!
+                SpaceItem* visualTile = m_tileUIMap[landedSpace->index()];
+                if (visualTile) {
+                    visualTile->update();
+                }
+            }
+        } else if (landedSpace->ownerId != currPlayer->m_id) {
+            Player* owner = m_gameEngine->m_players[landedSpace->ownerId];
+            PayRentDialog dialog(currPlayer, landedSpace, owner, this);
+            dialog.exec();
+            m_gameEngine->payRent();
+        }
+    }
+
+    m_gameEngine->changePlayerTurn();
 }
