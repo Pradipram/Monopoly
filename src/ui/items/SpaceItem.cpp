@@ -4,6 +4,7 @@
 #include <QFont>
 #include <QGraphicsSceneMouseEvent>
 
+#include "Player.h"
 #include "const.h"
 
 SpaceItem::SpaceItem(Space* spaceData, QGraphicsItem* parent)
@@ -146,12 +147,9 @@ void SpaceItem::drawPropertySpace(QPainter* painter, const QFont& font)
 
     // Draw ownership indicator at bottom of property tile (if owned)
     if (m_showOwnerIndicator && m_spaceData->ownerId != Constants::UNOWNED) {
-        // Player colors: 0=red, 1=blue, 2=green, 3=yellow, 4=cyan, 5=magenta, 6=orange, 7=purple
-        QList<QColor> colors = {Qt::red,  Qt::blue,    Qt::green,           Qt::yellow,
-                                Qt::cyan, Qt::magenta, QColor(255, 165, 0), QColor(128, 0, 128)};
-        int colorIdx = m_spaceData->ownerId % colors.size();
+        int colorIdx = m_spaceData->ownerId % PlayerColor.size();
 
-        painter->setBrush(colors[colorIdx]);
+        painter->setBrush(PlayerColor[colorIdx]);
         painter->setPen(QPen(Qt::black, 1));
         // Draw a small colored rect on the inner edge of the property
         painter->drawRect(TILE_WIDTH / 2.0 - 15, TILE_HEIGHT - 12, 30, 10);
@@ -347,35 +345,9 @@ void SpaceItem::drawOwnerIndicator(QPainter* painter)
     // If it's unowned (usually -1), don't draw anything
     if (m_spaceData->ownerId == -1) return;
 
-    QColor ownerColor;
-    switch (m_spaceData->ownerId) {
-        case 0:
-            ownerColor = Qt::red;
-            break;
-        case 1:
-            ownerColor = Qt::blue;
-            break;
-        case 2:
-            ownerColor = Qt::green;
-            break;
-        case 3:
-            ownerColor = Qt::yellow;
-            break;
-        case 4:
-            ownerColor = Qt::cyan;
-            break;
-        case 5:
-            ownerColor = Qt::magenta;
-            break;
-        case 6:
-            ownerColor = QColor(255, 165, 0);
-            break;  // Orange
-        case 7:
-            ownerColor = QColor(128, 0, 128);
-            break;  // Purple
-        default:
-            ownerColor = Qt::black;
-            break;
+    QColor ownerColor = Qt::black;
+    if (m_spaceData->ownerId >= 0 && !PlayerColor.isEmpty()) {
+        ownerColor = PlayerColor[m_spaceData->ownerId % PlayerColor.size()];
     }
 
     painter->save();

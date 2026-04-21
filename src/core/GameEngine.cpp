@@ -116,4 +116,32 @@ void GameEngine::payRent()
     int rentAmount = landedSpace->rent().at(houseCnt);
     currentPlayer->m_cash -= rentAmount;
     ownerPlayer->m_cash += rentAmount;
+    updatePlayerNetWorth();
+    updatePlayerNetWorth(ownerPlayer);
+}
+
+void GameEngine::increasePlayerCash(int amount)
+{
+    Player* currentPlayer = m_players[m_currentPlayerTurn];
+    currentPlayer->m_cash += amount;
+    updatePlayerNetWorth();
+}
+
+void GameEngine::updatePlayerNetWorth()
+{
+    Player* currentPlayer = m_players[m_currentPlayerTurn];
+    int netWorth = currentPlayer->m_cash;
+    for (Space* space : currentPlayer->m_ownedSpaces) {
+        netWorth += space->price();
+    }
+    currentPlayer->m_netWorth = netWorth;
+}
+
+void GameEngine::updatePlayerNetWorth(Player* player)
+{
+    int netWorth = player->m_cash;
+    for (Space* space : player->m_ownedSpaces) {
+        netWorth += space->price();
+    }
+    player->m_netWorth = netWorth;
 }

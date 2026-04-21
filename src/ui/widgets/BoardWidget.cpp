@@ -14,12 +14,12 @@
 #include <QScrollArea>
 #include <QTimer>
 #include <QVariantAnimation>
+#include <algorithm>
 
 #include "BoardUiUtils.h"
-#include "BuyPropertyDialog.h"
-#include "PayRentDialog.h"
 #include "PlayerInfoWidget.h"
 #include "SpaceItem.h"
+#include "ToastNotification.h"
 #include "const.h"
 
 QFrame* BoardWidget::createDicePanel(QWidget* parent)
@@ -105,7 +105,7 @@ void BoardWidget::rollDice()
                 m_gameEngine->advanceTurn(steps);
 
                 // Start the stepping animation instead of calling updateTokens() directly
-                animateTokenSteps(currPlayerIdx, startSpace, steps);
+                animateTokenSteps(currPlayerIdx, startSpace, steps, steps);
 
                 animationTimer->deleteLater();
             }
@@ -117,6 +117,7 @@ void BoardWidget::rollDice()
 BoardWidget::BoardWidget(int botCount, QWidget* parent) : QWidget(parent), m_botCount(botCount)
 {
     m_gameEngine = new GameEngine(1, botCount);
+    m_gameLogicHandler = new GameLogicHandler(m_gameEngine, this);
     init_UI();
 }
 
@@ -277,10 +278,6 @@ void BoardWidget::init_info_UI()
 
     QFrame* dicePanel = createDicePanel(sidePanel);
 
-    // 4. Define your 8 player colors (matching your tokens!)
-    QList<QColor> colors = {Qt::red,  Qt::blue,    Qt::green,           Qt::yellow,
-                            Qt::cyan, Qt::magenta, QColor(255, 165, 0), QColor(128, 0, 128)};
-
     // Create a scroll area for the player cards
     QScrollArea* playerScrollArea = new QScrollArea(sidePanel);
     playerScrollArea->setWidgetResizable(true);
@@ -290,10 +287,10 @@ void BoardWidget::init_info_UI()
 
     QWidget* playerListContainer = new QWidget(playerScrollArea);
     playerListContainer->setStyleSheet("background: transparent;");
-    QVBoxLayout* playerListLayout = new QVBoxLayout(playerListContainer);
-    playerListLayout->setAlignment(Qt::AlignTop);
-    playerListLayout->setSpacing(15);
-    playerListLayout->setContentsMargins(0, 0, 0, 0);
+    m_playerListLayout = new QVBoxLayout(playerListContainer);
+    m_playerListLayout->setAlignment(Qt::AlignTop);
+    m_playerListLayout->setSpacing(15);
+    m_playerListLayout->setContentsMargins(0, 0, 0, 0);
 
     // 5. Generate the 8 Player Cards
     for (int i = 0; i < m_gameEngine->m_players.size(); i++) {
@@ -301,16 +298,16 @@ void BoardWidget::init_info_UI()
         QString pName = m_gameEngine->m_players[i]->m_name;  // Get player name from GameEngine
 
         // Instantiate the custom widget we discussed earlier
-        PlayerInfoWidget* pCard = new PlayerInfoWidget(m_gameEngine->m_players[i]->m_id,
-                                                       m_gameEngine->m_players[i]->m_cash,
-                                                       colors[i], pName, playerListContainer);
+        PlayerInfoWidget* pCard = new PlayerInfoWidget(
+            m_gameEngine->m_players[i]->m_id, m_gameEngine->m_players[i]->m_cash,
+            PlayerColor[i % PlayerColor.size()], pName, playerListContainer);
 
         // Add it to the internal scroll layout
-        playerListLayout->addWidget(pCard);
+        m_playerListLayout->addWidget(pCard);
         m_playerCards.append(pCard);
     }
 
-    playerListLayout->addStretch();
+    m_playerListLayout->addStretch();
     playerScrollArea->setWidget(playerListContainer);
 
     // Add the scroll area to the main side layout so it takes up leftover space
@@ -387,11 +384,16 @@ void BoardWidget::updateActionPanel()
     m_turnStatusLabel->setText(statusText);
 }
 
-void BoardWidget::animateTokenSteps(int playerId, int currentSpace, int stepsRemaining)
+void BoardWidget::animateTokenSteps(int playerId, int currentSpace, int stepsRemaining,
+                                    int dice_outcome)
 {
     if (stepsRemaining <= 0) {
         // Once stepping is done, do final UI updates
-        handlePostMoveActions();
+        bool animationOngoing =
+            m_gameLogicHandler->handlePostMoveActions(m_tileUIMap, dice_outcome);
+        if (animationOngoing) {
+            return;
+        }
         updateActionPanel();
         updatePlayerInfo();
         int nextPlayerIdx = m_gameEngine->m_currentPlayerTurn;
@@ -409,6 +411,14 @@ void BoardWidget::animateTokenSteps(int playerId, int currentSpace, int stepsRem
     // Determine next space index (wrap around the board)
     int nextSpace = (currentSpace + 1) % m_gameEngine->m_spaces.size();
 
+    if (nextSpace == Constants::START_SPACE_INDEX) {
+        m_gameEngine->increasePlayerCash(400);
+        Player* movingPlayer = m_gameEngine->m_players[playerId];
+        QString msg = QString("%1 passed GO!\nCollected $400").arg(movingPlayer->m_name);
+        QColor playerColor = PlayerColor[playerId % PlayerColor.size()];
+        ToastNotification* toast = new ToastNotification(msg, playerColor, this);
+        toast->showToast();
+    }
     // Get the player token items
     PlayerTokenItem* token = m_playerTokens[playerId];
     SpaceItem* visualTile = m_tileUIMap[nextSpace];
@@ -434,9 +444,9 @@ void BoardWidget::animateTokenSteps(int playerId, int currentSpace, int stepsRem
 
     // When this tile animation finishes, trigger the next step
     QObject::connect(anim, &QVariantAnimation::finished, this,
-                     [this, anim, playerId, nextSpace, stepsRemaining]() {
+                     [this, anim, playerId, nextSpace, stepsRemaining, dice_outcome]() {
                          anim->deleteLater();
-                         animateTokenSteps(playerId, nextSpace, stepsRemaining - 1);
+                         animateTokenSteps(playerId, nextSpace, stepsRemaining - 1, dice_outcome);
                      });
 
     anim->start();
@@ -478,43 +488,35 @@ void BoardWidget::updateTokens()
 void BoardWidget::updatePlayerInfo()
 {
     int currPlayerIdx = m_gameEngine->m_currentPlayerTurn;
+
+    QVector<int> orderedPlayerIds;
+    orderedPlayerIds.reserve(m_gameEngine->m_players.size());
+
     for (int i = 0; i < m_playerCards.size(); i++) {
         Player* player = m_gameEngine->m_players[i];
+        orderedPlayerIds.append(i);
 
         m_playerCards[i]->setActive(i == currPlayerIdx);
         m_playerCards[i]->updateCash(player->m_cash);
+        m_playerCards[i]->updateNetWorth(player->m_netWorth);
         m_playerCards[i]->setOwnedProperties(player->m_ownedSpaces);
     }
-}
 
-void BoardWidget::handlePostMoveActions()
-{
-    // 1. Get the current state from your Game Engine
-    int currPlayerIdx = m_gameEngine->m_currentPlayerTurn;
-    Player* currPlayer = m_gameEngine->m_players[currPlayerIdx];
+    std::sort(orderedPlayerIds.begin(), orderedPlayerIds.end(), [this](int lhsId, int rhsId) {
+        const Player* lhs = m_gameEngine->m_players[lhsId];
+        const Player* rhs = m_gameEngine->m_players[rhsId];
 
-    // 2. Get the space the player is currently sitting on
-    Space* landedSpace = m_gameEngine->m_spaces[currPlayer->m_landedSpaceIndex];
+        if (lhs->m_netWorth != rhs->m_netWorth) {
+            return lhs->m_netWorth > rhs->m_netWorth;
+        }
 
-    if (landedSpace->type() == SpaceConstants::SpaceType::Property) {
-        if (landedSpace->ownerId == Constants::UNOWNED) {
-            BuyPropertyDialog dialog(currPlayer, landedSpace, this);
-            if (dialog.exec() == QDialog::Accepted) {
-                m_gameEngine->buyLandedProperty();
+        return lhsId < rhsId;
+    });
 
-                // Force custom redraw of that tile specifically so new owner color appears!
-                SpaceItem* visualTile = m_tileUIMap[landedSpace->index()];
-                if (visualTile) {
-                    visualTile->update();
-                }
-            }
-        } else if (landedSpace->ownerId != currPlayer->m_id) {
-            Player* owner = m_gameEngine->m_players[landedSpace->ownerId];
-            PayRentDialog dialog(currPlayer, landedSpace, owner, this);
-            dialog.exec();
-            m_gameEngine->payRent();
+    if (m_playerListLayout) {
+        for (int displayPos = 0; displayPos < orderedPlayerIds.size(); ++displayPos) {
+            m_playerListLayout->insertWidget(displayPos,
+                                             m_playerCards[orderedPlayerIds[displayPos]]);
         }
     }
-
-    m_gameEngine->changePlayerTurn();
 }

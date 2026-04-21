@@ -26,6 +26,10 @@ class GameEngine
     void buyLandedProperty();
     void changePlayerTurn();
     void payRent();
+    void increasePlayerCash(int amount);
+
+    void updatePlayerNetWorth();
+    void updatePlayerNetWorth(Player* player);
 };
 
 #endif  // GAMEENGINE_H

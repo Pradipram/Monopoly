@@ -6,6 +6,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QListWidget>
+#include <QTimer>
 #include <QVBoxLayout>
 
 #include "Space.h"
@@ -15,6 +16,8 @@ PlayerInfoWidget::PlayerInfoWidget(int playerId, int cash, QColor playerColor,
                                    const QString& playerName, QWidget* parent)
     : QWidget(parent), m_playerColor(playerColor)
 {
+    m_currentCash = cash;
+
     // Make this widget look like a nice card
     this->setAttribute(Qt::WA_StyledBackground, true);
     this->setObjectName("PlayerCard");
@@ -39,6 +42,9 @@ PlayerInfoWidget::PlayerInfoWidget(int playerId, int cash, QColor playerColor,
     m_cashLabel = new QLabel("Cash: $" + QString::number(cash));
     m_cashLabel->setStyleSheet("color: green; font-weight: bold; font-size: 14px;");
 
+    m_netWorthLabel = new QLabel("Net Worth: $" + QString::number(cash));
+    m_netWorthLabel->setStyleSheet("color: #1f2937; font-weight: bold; font-size: 13px;");
+
     m_propertiesButton = new QPushButton("Owned Spaces: 0");
     m_propertiesButton->setCursor(Qt::PointingHandCursor);
     m_propertiesButton->setStyleSheet(
@@ -55,18 +61,51 @@ PlayerInfoWidget::PlayerInfoWidget(int playerId, int cash, QColor playerColor,
 
     mainLayout->addWidget(m_nameLabel);
     mainLayout->addWidget(m_cashLabel);
+    mainLayout->addWidget(m_netWorthLabel);
     mainLayout->addWidget(m_propertiesButton);
 }
 
 void PlayerInfoWidget::updateCash(int newAmount)
 {
-    m_cashLabel->setText("Cash: $" + QString::number(newAmount));
+    if (newAmount == m_currentCash) {
+        return;  // No change, skip animation
+    }
+
+    int oldAmount = m_currentCash;
+    m_currentCash = newAmount;
+
+    // Determine if cash increased or decreased for color feedback
+    bool isIncrease = newAmount > oldAmount;
+    QString changeText = isIncrease ? "+" : "";
+    changeText += QString::number(newAmount - oldAmount);
+
+    // Highlight the label temporarily
+    QString originalStyle = m_cashLabel->styleSheet();
+    QString highlightColor = isIncrease ? "green" : "red";
+    m_cashLabel->setStyleSheet(
+        QString("color: %1; font-weight: bold; font-size: 16px; padding: 4px; border-radius: 4px; "
+                "background-color: rgba(0, 0, 0, 20);")
+            .arg(highlightColor));
+
+    // Update the text immediately
+    m_cashLabel->setText(QString("Cash: $%1 (%2)").arg(newAmount).arg(changeText));
+
+    // Animate back to normal after 800ms
+    QTimer::singleShot(800, this, [this, originalStyle]() {
+        m_cashLabel->setStyleSheet("color: green; font-weight: bold; font-size: 14px;");
+        m_cashLabel->setText("Cash: $" + QString::number(m_currentCash));
+    });
 }
 
 void PlayerInfoWidget::setOwnedProperties(const QVector<Space*>& spaces)
 {
     m_ownedSpaces = spaces;
     m_propertiesButton->setText("Owned Spaces: " + QString::number(m_ownedSpaces.size()));
+}
+
+void PlayerInfoWidget::updateNetWorth(int netWorth)
+{
+    m_netWorthLabel->setText("Net Worth: $" + QString::number(netWorth));
 }
 
 void PlayerInfoWidget::showOwnedPropertiesDialog()

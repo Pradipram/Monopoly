@@ -38,6 +38,13 @@ target_include_directories(QtMonopoly PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/windows
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/widgets
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/dialogs
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/items
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/logic
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/components
 )
 
 target_link_libraries(QtMonopoly PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)

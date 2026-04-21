@@ -3,6 +3,7 @@
 
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QPropertyAnimation>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QVector>
@@ -19,6 +20,7 @@ class PlayerInfoWidget : public QWidget
 
     // Functions to update the UI later
     void updateCash(int newAmount);
+    void updateNetWorth(int netWorth);
     void setOwnedProperties(const QVector<Space*>& spaces);
     void setActive(bool isActive);
 
@@ -27,9 +29,11 @@ class PlayerInfoWidget : public QWidget
 
     QLabel* m_nameLabel;
     QLabel* m_cashLabel;
+    QLabel* m_netWorthLabel;
     QPushButton* m_propertiesButton;
     QColor m_playerColor;
     QVector<Space*> m_ownedSpaces;
+    int m_currentCash = 0;  // Track current cash for animation
 };
 
 #endif  // PLAYERINFOWIDGET_H
