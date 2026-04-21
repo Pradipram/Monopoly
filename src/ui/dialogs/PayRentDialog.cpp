@@ -31,8 +31,15 @@ PayRentDialog::PayRentDialog(Player* player, Space* space, Player* owner, QWidge
         QTimer::singleShot(1000, this, [this]() { this->accept(); });
     }
     payBtn->setStyleSheet(
-        "background-color: #a83232; color: white; padding: 8px; font-weight: bold; border-radius: "
-        "4px;");
+        "QPushButton {"
+        "  background-color: #a83232;"
+        "  color: white;"
+        "  padding: 8px;"
+        "  font-weight: bold;"
+        "  border-radius: 4px;"
+        "}"
+        "QPushButton:hover:enabled { background-color: #8e2a2a; }"
+        "QPushButton:disabled { background-color: #cfb4b4; color: #f3ecec; }");
 
     mainLayout->addWidget(infoLabel);
     mainLayout->addWidget(rentLabel);

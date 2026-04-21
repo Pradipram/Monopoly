@@ -69,8 +69,11 @@ void ToastNotification::showToast()
     fadeIn->start(QAbstractAnimation::DeleteWhenStopped);
 
     QTimer::singleShot(kFadeInDurationMs + kVisibleDurationMs, this, [fadeOut, this]() {
+        // Connect before start so we cannot miss the finished signal.
+        connect(fadeOut, &QPropertyAnimation::finished, this, [this]() {
+            emit toastClosed();
+            this->deleteLater();
+        });
         fadeOut->start(QAbstractAnimation::DeleteWhenStopped);
-        // Automatically delete the toast from memory once it goes invisible!
-        connect(fadeOut, &QPropertyAnimation::finished, this, &QLabel::deleteLater);
     });
 }

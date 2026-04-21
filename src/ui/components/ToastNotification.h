@@ -24,6 +24,9 @@ class ToastNotification : public QLabel
 
    public slots:
     void showToast();
+
+   signals:
+    void toastClosed();
 };
 
 #endif  // TOASTNOTIFICATION_H

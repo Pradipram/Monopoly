@@ -43,17 +43,29 @@ BuyPropertyDialog::BuyPropertyDialog(Player* player, Space* space, QWidget* pare
 
     // Style buttons
     buyBtn->setStyleSheet(
-        "background-color: #2b5c40; color: white; padding: 8px; font-weight: bold; border-radius: "
-        "4px;");
+        "QPushButton {"
+        "  background-color: #2b5c40;"
+        "  color: white;"
+        "  padding: 8px;"
+        "  font-weight: bold;"
+        "  border-radius: 4px;"
+        "}"
+        "QPushButton:hover:enabled { background-color: #245136; }"
+        "QPushButton:disabled { background-color: #b9c3bd; color: #eef2ef; }");
     passBtn->setStyleSheet(
-        "background-color: #a83232; color: white; padding: 8px; font-weight: bold; border-radius: "
-        "4px;");
+        "QPushButton {"
+        "  background-color: #a83232;"
+        "  color: white;"
+        "  padding: 8px;"
+        "  font-weight: bold;"
+        "  border-radius: 4px;"
+        "}"
+        "QPushButton:hover:enabled { background-color: #8e2a2a; }"
+        "QPushButton:disabled { background-color: #cfb4b4; color: #f3ecec; }");
 
     // If they don't have enough money, disable the Buy button
     if (player->m_cash < space->price()) {
         buyBtn->setEnabled(false);
-        buyBtn->setStyleSheet(
-            "background-color: gray; color: white; padding: 8px; border-radius: 4px;");
         balanceLabel->setStyleSheet("color: red; font-weight: bold;");  // Highlight they are broke
     }
 

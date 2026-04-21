@@ -30,6 +30,7 @@ class GameEngine
 
     void updatePlayerNetWorth();
     void updatePlayerNetWorth(Player* player);
+    void payPlayer(int toPlayerId, int amount);
 };
 
 #endif  // GAMEENGINE_H

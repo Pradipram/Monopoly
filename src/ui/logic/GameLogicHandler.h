@@ -51,8 +51,12 @@ class GameLogicHandler : public QObject
     int m_jailIndex = 10;
 
     bool chanceLogic(int dice_outcome);
+    bool moveCurrentPlayerToJail(int dice_outcome);
     bool triggerDelayedMovement(int stepsToGo, int dice_outcome, Player* currPlayer,
                                 int currentSpace);
+
+   public slots:
+    void showEndTurnMenu();
 };
 
 #endif  // GAMELOGICHANDLER_H

@@ -345,7 +345,7 @@
     "index": 38,
     "name": "Income Tax",
     "type": "Tax",
-    "price": 100,
+    "price": 200,
     "rent": [0, 0, 0, 0, 0, 0],
     "houseBuildCost": 0,
     "colorGroup": "None"

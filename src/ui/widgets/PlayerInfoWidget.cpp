@@ -55,7 +55,9 @@ PlayerInfoWidget::PlayerInfoWidget(int playerId, int cash, QColor playerColor,
         "  padding: 5px;"
         "  font-weight: bold;"
         "}"
-        "QPushButton:hover { background-color: rgb(54, 102, 74); }");
+        "QPushButton:hover:enabled { background-color: rgb(54, 102, 74); }"
+        "QPushButton:disabled { background-color: rgb(158, 172, 163); color: rgb(230, 235, 232); "
+        "}");
     connect(m_propertiesButton, &QPushButton::clicked, this,
             &PlayerInfoWidget::showOwnedPropertiesDialog);
 
@@ -119,7 +121,10 @@ void PlayerInfoWidget::showOwnedPropertiesDialog()
         "QLabel { color: black; } "
         "QGraphicsView { background-color: #fafafa; border: 1px solid #cfcfcf; outline: none; } "
         "QPushButton { color: black; background-color: #f0f0f0; padding: 5px; border: 1px solid "
-        "#aaa; border-radius: 3px; }");
+        "#aaa; border-radius: 3px; }"
+        "QPushButton:hover:enabled { background-color: #e4e4e4; }"
+        "QPushButton:disabled { background-color: #eeeeee; color: #9a9a9a; border-color: #d5d5d5; "
+        "}");
 
     QVBoxLayout* layout = new QVBoxLayout(&dialog);
     QLabel* titleLabel = new QLabel("Properties owned by this player:", &dialog);
@@ -191,6 +196,9 @@ void PlayerInfoWidget::showOwnedPropertiesDialog()
     }
 
     QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, &dialog);
+    for (QPushButton* button : buttonBox->findChildren<QPushButton*>()) {
+        button->setCursor(Qt::PointingHandCursor);
+    }
     QObject::connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
     layout->addWidget(buttonBox);
 

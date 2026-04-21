@@ -145,3 +145,15 @@ void GameEngine::updatePlayerNetWorth(Player* player)
     }
     player->m_netWorth = netWorth;
 }
+
+void GameEngine::payPlayer(int toPlayerId, int amount)
+{
+    Player* currentPlayer = m_players[m_currentPlayerTurn];
+    Player* recipientPlayer = m_players[toPlayerId];
+
+    currentPlayer->m_cash -= amount;
+    recipientPlayer->m_cash += amount;
+
+    updatePlayerNetWorth();
+    updatePlayerNetWorth(recipientPlayer);
+}

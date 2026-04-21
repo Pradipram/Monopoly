@@ -35,6 +35,9 @@ bool GameLogicHandler::handlePostMoveActions(const QMap<int, SpaceItem*>& tileUI
     Space* landedSpace = m_gameEngine->m_spaces[currPlayer->m_landedSpaceIndex];
 
     switch (landedSpace->type()) {
+        case SpaceConstants::SpaceType::WaterCompany:
+        case SpaceConstants::SpaceType::PowerCompany:
+        case SpaceConstants::SpaceType::Railroad:
         case SpaceConstants::SpaceType::Property:
             if (landedSpace->ownerId == Constants::UNOWNED) {
                 BuyPropertyDialog dialog(currPlayer, landedSpace, m_parentWidget);
@@ -63,32 +66,83 @@ bool GameLogicHandler::handlePostMoveActions(const QMap<int, SpaceItem*>& tileUI
             break;
         }
 
+        case SpaceConstants::SpaceType::Parking: {
+            ToastNotification* toast =
+                new ToastNotification("Just taking a breather at Premium Parking! Pay $400 to Bank",
+                                      Qt::cyan, m_parentWidget);
+            toast->showToast();
+            m_gameEngine->increasePlayerCash(-400);
+            break;
+        }
+
+        case SpaceConstants::SpaceType::Tax: {
+            ToastNotification* toast =
+                new ToastNotification("Ouch, tax time! Pay $200 to Bank", Qt::red, m_parentWidget);
+            toast->showToast();
+            m_gameEngine->increasePlayerCash(-200);
+            break;
+        }
+
+        case SpaceConstants::SpaceType::GoToJail: {
+            ToastNotification* toast = new ToastNotification(
+                "Oh no, Go To Jail! Moving to Jail space...", Qt::darkRed, m_parentWidget);
+            toast->showToast();
+            animationTriggered = moveCurrentPlayerToJail(dice_outcome);
+            if (animationTriggered) {
+                shouldChangeTurn = false;
+            }
+            break;
+        }
         default:
             break;
     }
 
     if (shouldChangeTurn) {
-        // bool turnEnded = false;
-        if (landedSpace->type() == SpaceConstants::SpaceType::Chance ||
-            landedSpace->type() == SpaceConstants::SpaceType::Go) {
+        ToastNotification* activeToast = nullptr;
+        const auto toasts = m_parentWidget->findChildren<ToastNotification*>();
+
+        // Prefer the most recently created visible toast.
+        for (auto it = toasts.crbegin(); it != toasts.crend(); ++it) {
+            if ((*it)->isVisible()) {
+                activeToast = *it;
+                break;
+            }
+        }
+
+        if (activeToast) {
             QEventLoop loop;
-            QTimer::singleShot(ToastNotification::totalDurationMs(), &loop, &QEventLoop::quit);
+            QTimer safetyTimeout;
+            safetyTimeout.setSingleShot(true);
+
+            connect(activeToast, &ToastNotification::toastClosed, &loop, &QEventLoop::quit);
+            connect(activeToast, &QObject::destroyed, &loop, &QEventLoop::quit);
+            connect(&safetyTimeout, &QTimer::timeout, &loop, &QEventLoop::quit);
+
+            // Prevent deadlock if the toast was already closing before connections were made.
+            safetyTimeout.start(ToastNotification::totalDurationMs() + 500);
             loop.exec();
         }
 
-        EndTurnDialog actionMenu(currPlayer, m_gameEngine, m_parentWidget);
-        int choice = actionMenu.exec();
-
-        if (choice == EndTurnDialog::Trade) {
-            // TODO: Trigger your custom Trade Dialog here later
-            QMessageBox::information(m_parentWidget, "Trade", "Trade Dialog coming soon!");
-        } else if (choice == EndTurnDialog::Build) {
-            // TODO: Trigger your custom Build Dialog here later
-            QMessageBox::information(m_parentWidget, "Build", "Build Dialog coming soon!");
-        }
-        m_gameEngine->changePlayerTurn();
+        showEndTurnMenu();
     }
     return animationTriggered;
+}
+
+void GameLogicHandler::showEndTurnMenu()
+{
+    int currPlayerIdx = m_gameEngine->m_currentPlayerTurn;
+    Player* currPlayer = m_gameEngine->m_players[currPlayerIdx];
+    EndTurnDialog actionMenu(currPlayer, m_gameEngine, m_parentWidget);
+    int choice = actionMenu.exec();
+
+    if (choice == EndTurnDialog::Trade) {
+        // TODO: Trigger your custom Trade Dialog here later
+        QMessageBox::information(m_parentWidget, "Trade", "Trade Dialog coming soon!");
+    } else if (choice == EndTurnDialog::Build) {
+        // TODO: Trigger your custom Build Dialog here later
+        QMessageBox::information(m_parentWidget, "Build", "Build Dialog coming soon!");
+    }
+    m_gameEngine->changePlayerTurn();
 }
 
 bool GameLogicHandler::chanceLogic(int dice_outcome)
@@ -121,8 +175,8 @@ bool GameLogicHandler::chanceLogic(int dice_outcome)
             int stepsToMove =
                 m_gameEngine->m_spaces.size();  // Start with max possible, then find nearest
             for (int idx : m_railroadIndices) {
-                int delta =
-                    (idx - currentSpace + m_gameEngine->m_spaces.size()) % m_gameEngine->m_spaces.size();
+                int delta = (idx - currentSpace + m_gameEngine->m_spaces.size()) %
+                            m_gameEngine->m_spaces.size();
                 if (delta == 0) {
                     delta = m_gameEngine->m_spaces.size();
                 }
@@ -166,7 +220,8 @@ bool GameLogicHandler::chanceLogic(int dice_outcome)
             int currentPlayerIdx = m_gameEngine->m_currentPlayerTurn;
             for (int i = 0; i < totalPlayers; ++i) {
                 if (i != currentPlayerIdx) {
-                    m_gameEngine->increasePlayerCash(-50);
+                    // m_gameEngine->increasePlayerCash(-50);
+                    m_gameEngine->payPlayer(i, 50);
                 }
             }
             return false;
@@ -178,17 +233,21 @@ bool GameLogicHandler::chanceLogic(int dice_outcome)
             return false;
         }
         case 12: {
-            Player* currPlayer = m_gameEngine->m_players[m_gameEngine->m_currentPlayerTurn];
-            const int currentSpace = currPlayer->m_landedSpaceIndex;
-            const int boardSize = m_gameEngine->m_spaces.size();
-            const int jailIndex = m_jailIndex;
-            const int stepsToGo = (jailIndex - currentSpace + boardSize) % boardSize;
-            return triggerDelayedMovement(stepsToGo, dice_outcome, currPlayer, currentSpace);
+            return moveCurrentPlayerToJail(dice_outcome);
         }
         default:
             return false;
     }
     return false;
+}
+
+bool GameLogicHandler::moveCurrentPlayerToJail(int dice_outcome)
+{
+    Player* currPlayer = m_gameEngine->m_players[m_gameEngine->m_currentPlayerTurn];
+    const int currentSpace = currPlayer->m_landedSpaceIndex;
+    const int boardSize = m_gameEngine->m_spaces.size();
+    const int stepsToJail = (m_jailIndex - currentSpace + boardSize) % boardSize;
+    return triggerDelayedMovement(stepsToJail, dice_outcome, currPlayer, currentSpace);
 }
 
 bool GameLogicHandler::triggerDelayedMovement(int stepsToGo, int dice_outcome, Player* currPlayer,

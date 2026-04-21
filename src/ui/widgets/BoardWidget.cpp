@@ -61,7 +61,11 @@ QFrame* BoardWidget::createDicePanel(QWidget* parent)
         "  font-weight: bold;"
         "}"
         "QPushButton:hover { background-color: rgb(54, 102, 74); }"
-        "QPushButton:pressed { background-color: rgb(43, 84, 61); }");
+        "QPushButton:pressed { background-color: rgb(43, 84, 61); }"
+        "QPushButton:disabled {"
+        "  background-color: rgb(158, 172, 163);"
+        "  color: rgb(230, 235, 232);"
+        "}");
 
     diceLayout->addWidget(m_dieOneLabel);
     diceLayout->addWidget(m_dieTwoLabel);

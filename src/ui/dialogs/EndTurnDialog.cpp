@@ -1,7 +1,10 @@
 #include "EndTurnDialog.h"
 
+#include <QTimer>
+
 EndTurnDialog::EndTurnDialog(Player* player, GameEngine* engine, QWidget* parent) : QDialog(parent)
 {
+    Player* currPlayer = engine->m_players[engine->m_currentPlayerTurn];
     setWindowTitle("End of Turn Actions");
     setFixedSize(300, 250);
     setStyleSheet("QDialog { background-color: white; }");
@@ -45,27 +48,63 @@ EndTurnDialog::EndTurnDialog(Player* player, GameEngine* engine, QWidget* parent
     QPushButton* tradeBtn = new QPushButton("Trade Properties");
     QPushButton* buildBtn = new QPushButton("Build Houses");
     QPushButton* endTurnBtn = new QPushButton("End Turn (Do Nothing)");
+    tradeBtn->setCursor(Qt::PointingHandCursor);
+    buildBtn->setCursor(Qt::PointingHandCursor);
+    endTurnBtn->setCursor(Qt::PointingHandCursor);
+    if (currPlayer->m_isBot) {
+        tradeBtn->setEnabled(false);
+        buildBtn->setEnabled(false);
+        endTurnBtn->setEnabled(false);
+    }
 
     // Styling
     tradeBtn->setStyleSheet(
-        "background-color: #2b5c80; color: white; padding: 10px; font-weight: bold; border-radius: "
-        "4px;");
+        "QPushButton {"
+        "  background-color: #2b5c80;"
+        "  color: white;"
+        "  padding: 10px;"
+        "  font-weight: bold;"
+        "  border-radius: 4px;"
+        "}"
+        "QPushButton:hover:enabled { background-color: #254f6d; }"
+        "QPushButton:disabled { background-color: #b5c3cf; color: #edf1f4; }");
 
     if (hasMonopoly) {
         buildBtn->setStyleSheet(
-            "background-color: #2b803b; color: white; padding: 10px; font-weight: bold; "
-            "border-radius: 4px;");
+            "QPushButton {"
+            "  background-color: #2b803b;"
+            "  color: white;"
+            "  padding: 10px;"
+            "  font-weight: bold;"
+            "  border-radius: 4px;"
+            "}"
+            "QPushButton:hover:enabled { background-color: #236a31; }"
+            "QPushButton:disabled { background-color: #b9cbbb; color: #ecf3ed; }");
     } else {
         buildBtn->setStyleSheet(
-            "background-color: #cccccc; color: #666666; padding: 10px; font-weight: bold; "
-            "border-radius: 4px;");
+            "QPushButton {"
+            "  background-color: #2b803b;"
+            "  color: white;"
+            "  padding: 10px;"
+            "  font-weight: bold;"
+            "  border-radius: 4px;"
+            "}"
+            "QPushButton:hover:enabled { background-color: #236a31; }"
+            "QPushButton:disabled { background-color: #cccccc; color: #666666; }");
         buildBtn->setEnabled(false);
         buildBtn->setToolTip("You must own a complete color set to build houses.");
     }
 
     endTurnBtn->setStyleSheet(
-        "background-color: #a83232; color: white; padding: 10px; font-weight: bold; border-radius: "
-        "4px;");
+        "QPushButton {"
+        "  background-color: #a83232;"
+        "  color: white;"
+        "  padding: 10px;"
+        "  font-weight: bold;"
+        "  border-radius: 4px;"
+        "}"
+        "QPushButton:hover:enabled { background-color: #8e2a2a; }"
+        "QPushButton:disabled { background-color: #cfb4b4; color: #f3ecec; }");
 
     mainLayout->addWidget(titleLabel);
     mainLayout->addWidget(tradeBtn);
@@ -75,6 +114,10 @@ EndTurnDialog::EndTurnDialog(Player* player, GameEngine* engine, QWidget* parent
 
     // --- CONNECT BUTTONS TO CUSTOM RETURN CODES ---
     // Instead of accept/reject, we return our custom Enums!
+    if (currPlayer->m_isBot) {
+        QTimer::singleShot(1500, this, [this]() { done(EndTurn); });
+        return;
+    }
     connect(tradeBtn, &QPushButton::clicked, this, [this]() { done(Trade); });
     connect(buildBtn, &QPushButton::clicked, this, [this]() { done(Build); });
     connect(endTurnBtn, &QPushButton::clicked, this, [this]() { done(EndTurn); });
